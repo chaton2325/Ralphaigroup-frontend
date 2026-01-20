@@ -1,0 +1,60 @@
+body {
+  background-color: black;
+  color: white;
+  font-family: 'Courier New', Courier, monospace; /* Police simple style terminal */
+  margin: 0;
+}
+
+.container {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+  border: 1px solid #333;
+}
+
+h2 {
+  text-align: center;
+  color: #00ff00; /* Vert fluo */
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+input {
+  width: 100%;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: white;
+  color: black;
+  border: 2px solid #00ff00;
+  border-radius: 0; /* Pas de radius */
+  box-sizing: border-box;
+  font-weight: bold;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  background-color: #00ff00;
+  color: black;
+  border: none;
+  border-radius: 0; /* Pas de radius */
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  margin-top: 10px;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* Bouton secondaire (contour vert, fond noir) */
+button.secondary {
+  background-color: transparent;
+  color: #00ff00;
+  border: 2px solid #00ff00;
+  margin-top: 20px;
+}
+
+.error { color: #ff4444; text-align: center; }
+.success { color: #00ff00; text-align: center; }
