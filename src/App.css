@@ -589,3 +589,57 @@ header {
         flex-direction: column;
     }
 }
+
+/* Create Video Page */
+.create-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.create-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.form-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.result-container {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+/* Filters */
+.filter-btn {
+    padding: 0.6rem 1.2rem;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all 0.2s;
+}
+
+.filter-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.filter-btn:hover:not(.active) {
+    background: var(--bg-light);
+}
+
+.video-wrapper.portrait {
+    aspect-ratio: 9/16;
+}

@@ -6,6 +6,7 @@ import Footer from './Footer';
 import Dashboard from './Dashboard';
 import Projects from './Projects';
 import Sidebar from './Sidebar';
+import CreateVideo from './CreateVideo';
 
 function App() {
   // État pour gérer la page affichée : 'home', 'login', ou 'signup'
@@ -14,7 +15,7 @@ function App() {
   });
 
   // Vérifie si on est sur une page connectée
-  const isAuthPage = ['dashboard', 'projects'].includes(currentPage);
+  const isAuthPage = ['dashboard', 'projects', 'create'].includes(currentPage);
 
   // Fonction pour afficher le contenu selon la page active
   const renderContent = () => {
@@ -27,6 +28,8 @@ function App() {
         return <Dashboard onNavigate={setCurrentPage} />;
       case 'projects':
         return <Projects onNavigate={setCurrentPage} />;
+      case 'create':
+        return <CreateVideo onNavigate={setCurrentPage} />;
       default:
         return (
           <>

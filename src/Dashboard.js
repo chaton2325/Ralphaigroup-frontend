@@ -3,7 +3,7 @@ import api from './services/api';
 
 function Dashboard({ onNavigate }) {
   // Récupération des infos utilisateur stockées lors du login
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
   
   // États pour la gestion des paiements
   const [packages, setPackages] = useState([]);
@@ -17,18 +17,29 @@ function Dashboard({ onNavigate }) {
     onNavigate('home');
   };
 
-  // Charger l'historique récent
+  // Charger l'historique récent et le solde de jetons
   useEffect(() => {
-    const fetchHistory = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get('/video/history');
+        // 1. Historique
+        const historyResponse = await api.get('/video/history');
         // On prend les 3 dernières vidéos
-        setRecentVideos((response.data.history || []).slice(0, 3));
+        setRecentVideos((historyResponse.data.history || []).slice(0, 3));
+
+        // 2. Solde de jetons
+        const balanceResponse = await api.get('/users/balance');
+        if (balanceResponse.data.tokens !== undefined) {
+          setUser(prevUser => {
+            const updatedUser = { ...prevUser, tokens: balanceResponse.data.tokens };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            return updatedUser;
+          });
+        }
       } catch (err) {
-        console.error("Erreur chargement historique dashboard", err);
+        console.error("Erreur chargement données dashboard", err);
       }
     };
-    fetchHistory();
+    fetchData();
   }, []);
 
   // Récupérer les packs depuis l'API
@@ -91,7 +102,7 @@ function Dashboard({ onNavigate }) {
       <div className="create-section">
          <h3>Prêt à créer quelque chose d'unique ?</h3>
          <p>Générez des vidéos publicitaires professionnelles en quelques secondes grâce à notre IA.</p>
-         <button className="btn-create-big">
+         <button className="btn-create-big" onClick={() => onNavigate('create')}>
             + Créer une nouvelle vidéo
          </button>
       </div>

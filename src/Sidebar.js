@@ -18,6 +18,12 @@ function Sidebar({ currentPage, onNavigate }) {
           📊 Tableau de bord
         </button>
         <button 
+          className={`nav-item ${currentPage === 'create' ? 'active' : ''}`}
+          onClick={() => onNavigate('create')}
+        >
+          ✨ Nouvelle Création
+        </button>
+        <button 
           className={`nav-item ${currentPage === 'projects' ? 'active' : ''}`}
           onClick={() => onNavigate('projects')}
         >
