@@ -44,7 +44,7 @@ function CreateVideo({ onNavigate }) {
         const formDataImage = new FormData();
         formDataImage.append('file', file);
 
-        const uploadRes = await fetch('http://127.0.0.1:5000/upload', {
+        const uploadRes = await fetch('https://service.ralp-ai.site/upload', {
           method: 'POST',
           body: formDataImage
         });
@@ -178,7 +178,6 @@ function CreateVideo({ onNavigate }) {
                 key={previewUrl ? 'loaded' : 'empty'}
                 style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e5e7eb' }} 
               />
-              <small style={{ color: 'var(--text-muted)' }}>L'image sera uploadée pour générer un lien public.</small>
               <small style={{ color: '#ef4444', display: 'block', marginTop: '0.2rem' }}>⚠️ Uniquement JPG ou JPEG.</small>
               {previewUrl && (
                 <div style={{ marginTop: '0.5rem' }}>
@@ -190,9 +189,7 @@ function CreateVideo({ onNavigate }) {
                       onError={() => setError("Impossible de charger l'image depuis le lien généré.")}
                     />
                   </div>
-                  <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: '#6b7280', wordBreak: 'break-all' }}>
-                    Lien : {cloudinaryUrl}
-                  </div>
+
                   <button 
                     type="button" 
                     onClick={handleRemoveImage}
@@ -217,8 +214,8 @@ function CreateVideo({ onNavigate }) {
             <div className="form-group" style={{ width: '150px' }}>
               <label>Format</label>
               <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <option value="pc">Paysage (16:9)</option>
-                <option value="mobile">Portrait (9:16)</option>
+                <option value="pc">Paysage (16:9) (Réels tiktok , instagram etc) </option>
+                <option value="mobile">Portrait (9:16) (videos au format pc) </option>
               </select>
             </div>
 
@@ -267,7 +264,7 @@ function CreateVideo({ onNavigate }) {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '450px', textAlign: 'center' }}>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Upload de l'image en cours...</h3>
-            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>Veuillez patienter pendant le transfert vers le serveur.</p>
+            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>Veuillez patienter s'il vous plaît.</p>
             <div style={{ marginTop: '1rem', fontSize: '3rem' }}>📤</div>
           </div>
         </div>
