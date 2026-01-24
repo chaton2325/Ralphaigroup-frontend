@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import api from './services/api';
 
 function Signup({ onNavigate }) {
-  const [formData, setFormData] = useState({ username: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ username: '', email: '', emailConfirm: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -11,6 +11,13 @@ function Signup({ onNavigate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Vérification que les deux emails sont identiques
+    if (formData.email !== formData.emailConfirm) {
+      setError("Les emails ne correspondent pas");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -37,6 +44,10 @@ function Signup({ onNavigate }) {
           <div className="form-group">
             <label>Email</label>
             <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="votre@email.com" required />
+          </div>
+          <div className="form-group">
+            <label>Confirmer Email</label>
+            <input type="email" name="emailConfirm" value={formData.emailConfirm} onChange={handleChange} placeholder="Retapez votre email" required />
           </div>
           <div className="form-group">
             <label>Mot de passe</label>
