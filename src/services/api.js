@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api', // Basé sur vos logs curl
+  baseURL: 'https:/plv.ralp-ai.site/api', // Basé sur vos logs curl
   headers: {
     'Content-Type': 'application/json',
   },

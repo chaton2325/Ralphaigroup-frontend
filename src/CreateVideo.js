@@ -13,6 +13,9 @@ function CreateVideo({ onNavigate }) {
   const [error, setError] = useState('');
   const [generatedVideo, setGeneratedVideo] = useState(null);
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
+  const [packages, setPackages] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   const handleRemoveImage = () => {
     setImageFile(null);
@@ -82,6 +85,12 @@ function CreateVideo({ onNavigate }) {
     e.preventDefault();
     if (uploadingImage) return;
 
+    if ((user.tokens || 0) < 10) {
+      setError("Vous n'avez pas assez de jetons. Le coût est de 10 jetons par vidéo. Veuillez recharger votre compte.");
+      handleRechargeClick();
+      return;
+    }
+
     setLoading(true);
     setError('');
     setGeneratedVideo(null);
@@ -127,6 +136,32 @@ function CreateVideo({ onNavigate }) {
     }
   };
 
+  const handleRechargeClick = async () => {
+    setPaymentLoading(true);
+    try {
+      const response = await api.get('/payment/packages');
+      setPackages(response.data);
+      setShowModal(true);
+    } catch (err) {
+      alert("Impossible de charger les offres pour le moment.");
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const handleBuyPackage = async (packageId) => {
+    setPaymentLoading(true);
+    try {
+      const response = await api.post('/payment/create-session', { packageId, email: user.email });
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Erreur lors de l'initialisation du paiement.");
+      setPaymentLoading(false);
+    }
+  };
+
   const wordCount = prompt.trim().split(/\s+/).filter(w => w.length > 0).length;
 
   return (
@@ -139,7 +174,7 @@ function CreateVideo({ onNavigate }) {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
           <div className="token-badge">
              <span>{user.tokens || 0} Crédits</span>
-             <button className="btn-add-token" onClick={() => onNavigate('dashboard')} title="Recharger">+</button>
+             <button className="btn-add-token" onClick={handleRechargeClick} disabled={paymentLoading} title="Recharger">+</button>
           </div>
           <small style={{ color: 'var(--text-muted)' }}>Coût : 10 jetons / vidéo</small>
         </div>
@@ -266,6 +301,29 @@ function CreateVideo({ onNavigate }) {
             <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Upload de l'image en cours...</h3>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>Veuillez patienter s'il vous plaît.</p>
             <div style={{ marginTop: '1rem', fontSize: '3rem' }}>📤</div>
+          </div>
+        </div>
+      )}
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
+            <h2 style={{ textAlign: 'center', fontSize: '2rem', marginBottom: '0.5rem' }}>Recharger vos crédits</h2>
+            <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '2rem' }}>Choisissez le pack qui correspond à vos besoins</p>
+            
+            <div className="packages-grid">
+              {packages.map((pkg) => (
+                <div key={pkg.id} className="package-card">
+                  <h3 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0' }}>{pkg.name}</h3>
+                  <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>{(pkg.price / 100).toFixed(2)}€</div>
+                  <div style={{ fontSize: '1.2rem', color: 'var(--primary)', fontWeight: '600', margin: '1rem 0' }}>{pkg.tokens} Jetons</div>
+                  <button className="btn btn-signup" onClick={() => handleBuyPackage(pkg.id)} disabled={paymentLoading} style={{ width: '100%', marginTop: '1rem', opacity: paymentLoading ? 0.7 : 1 }}>
+                    {paymentLoading ? 'Chargement...' : 'Choisir'}
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

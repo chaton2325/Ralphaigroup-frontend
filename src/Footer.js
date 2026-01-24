@@ -8,6 +8,9 @@ function Footer() {
         <div style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>
           &copy; {new Date().getFullYear()} Ralphaigroup. Tous droits réservés.
         </div>
+        <div style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>
+          Contact : <a href="mailto:contact@ralp-ai.site" style={{color: 'var(--primary)', textDecoration: 'none'}}>contact@ralp-ai.site</a> (Réponse sous 24h)
+        </div>
         <div style={{display: 'flex', gap: '1rem', fontSize: '0.9rem'}}>
           <span style={{color: 'var(--text-muted)', cursor: 'pointer'}}>Mentions légales</span>
           <span style={{color: 'var(--text-muted)', cursor: 'pointer'}}>Confidentialité</span>
