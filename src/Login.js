@@ -14,7 +14,7 @@ function Login({ onNavigate }) {
 
     try {
       const response = await api.post('/auth/login', { email, password });
-      
+
       // Sauvegarde du token et des infos utilisateur
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify({
@@ -33,35 +33,36 @@ function Login({ onNavigate }) {
 
   return (
     <div className="auth-split-container">
-      <div className="auth-left">
+      <div className="auth-left reveal">
         <img src="/image/favicon.jpg" alt="ralp-ai logo" className="auth-brand-logo" />
         <h1 className="auth-brand-name">ralp-ai</h1>
-        <p className="auth-brand-desc">Connectez-vous pour accéder à votre studio de création vidéo IA et gérer vos projets.</p>
+        <p className="auth-brand-desc">Accédez à l'excellence technologique. Studio de création vidéo haute performance.</p>
       </div>
-      
-      <div className="auth-right">
-        <div className="auth-card">
-          <h2 style={{textAlign: 'center', marginBottom: '2rem', fontSize: '1.8rem'}}>Connexion</h2>
-          {error && <div style={{color: 'red', marginBottom: '1rem', textAlign: 'center'}}>{error}</div>}
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
+
+      <div className="auth-right reveal">
+        <div className="auth-card-apple glass">
+          <h2 className="auth-title">Connexion</h2>
+          {error && <div className="error-pill">{error}</div>}
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-group-apple">
               <label>Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.com" required />
             </div>
-            <div className="form-group">
+            <div className="form-group-apple">
               <label>Mot de passe</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
             </div>
-            <button type="submit" className="btn btn-signup" disabled={loading} style={{width: '100%', border: 'none', cursor: 'pointer', fontSize: '1rem', opacity: loading ? 0.7 : 1}}>
+            <button type="submit" className="btn-apple-primary w-full" disabled={loading}>
               {loading ? 'Connexion...' : 'Se connecter'}
             </button>
           </form>
-          <p style={{textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted)'}}>
-            Pas encore de compte ? <a href="#" onClick={(e) => {e.preventDefault(); onNavigate('signup')}} style={{color: 'var(--primary)', textDecoration: 'none', fontWeight: '600'}}>S'inscrire</a>
-          </p>
+          <div className="auth-footer-link">
+            Pas encore de compte ? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('signup') }}>S'inscrire</a>
+          </div>
         </div>
       </div>
     </div>
+
   );
 }
 
