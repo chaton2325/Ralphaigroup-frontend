@@ -9,7 +9,7 @@ function Sidebar({ currentPage, onNavigate }) {
 
   return (
     <div className="sidebar">
-      <div className="sidebar-logo" onClick={() => onNavigate('dashboard')}>Ralphaigroup</div>
+      <div className="sidebar-logo" onClick={() => onNavigate('dashboard')}>ralp-ai</div>
       <nav className="sidebar-nav">
         <button 
           className={`nav-item ${currentPage === 'dashboard' ? 'active' : ''}`}

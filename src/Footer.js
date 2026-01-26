@@ -3,18 +3,38 @@ import React from 'react';
 function Footer() {
   return (
     <footer className="footer">
-      <div className="footer-content">
-        <div className="logo" style={{fontSize: '1.2rem'}}>Ralphaigroup</div>
-        <div style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>
-          &copy; {new Date().getFullYear()} Ralphaigroup. Tous droits réservés.
+      <div className="footer-container">
+        <div className="footer-brand">
+          <div className="logo">
+             <img src="/image/favicon.jpg" alt="ralp-ai" style={{height: '32px', borderRadius: '50%'}} />
+             <span>ralp-ai</span>
+          </div>
+          <p>La solution ultime pour générer des vidéos publicitaires et virales grâce à l'intelligence artificielle.</p>
         </div>
-        <div style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>
-          Contact : <a href="mailto:contact@ralp-ai.site" style={{color: 'var(--primary)', textDecoration: 'none'}}>contact@ralp-ai.site</a> (Réponse sous 24h)
+
+        <div className="footer-links">
+          <h4>Produit</h4>
+          <a href="#">Tarifs</a>
+          <a href="#">Fonctionnalités</a>
+          <a href="#">Showcase</a>
         </div>
-        <div style={{display: 'flex', gap: '1rem', fontSize: '0.9rem'}}>
-          <span style={{color: 'var(--text-muted)', cursor: 'pointer'}}>Mentions légales</span>
-          <span style={{color: 'var(--text-muted)', cursor: 'pointer'}}>Confidentialité</span>
+
+        <div className="footer-links">
+          <h4>Légal</h4>
+          <a href="#">Mentions légales</a>
+          <a href="#">Politique de confidentialité</a>
+          <a href="#">CGV</a>
         </div>
+
+        <div className="footer-contact">
+          <h4>Contact</h4>
+          <p>Besoin d'aide ?</p>
+          <a href="mailto:contact@ralp-ai.site" className="contact-email">contact@ralp-ai.site</a>
+        </div>
+      </div>
+      
+      <div className="footer-bottom">
+        &copy; {new Date().getFullYear()} ralp-ai. Tous droits réservés.
       </div>
     </footer>
   );
