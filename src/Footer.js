@@ -6,8 +6,8 @@ function Footer() {
       <div className="footer-container">
         <div className="footer-brand">
           <div className="logo">
-             <img src="/image/favicon.jpg" alt="ralp-ai" style={{height: '32px', borderRadius: '50%'}} />
-             <span>ralp-ai</span>
+            <img src="/image/favicon.jpg" alt="ralp-ai" style={{ height: '32px', borderRadius: '50%' }} />
+            <span>ralp-ai</span>
           </div>
           <p>La solution ultime pour générer des vidéos publicitaires et virales grâce à l'intelligence artificielle.</p>
         </div>
@@ -32,7 +32,7 @@ function Footer() {
           <a href="mailto:contact@ralp-ai.site" className="contact-email">contact@ralp-ai.site</a>
         </div>
       </div>
-      
+
       <div className="footer-bottom">
         &copy; {new Date().getFullYear()} ralp-ai. Tous droits réservés.
       </div>
