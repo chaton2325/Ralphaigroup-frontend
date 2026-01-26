@@ -74,36 +74,22 @@ function Dashboard({ onNavigate }) {
 
   return (
     <div className="dashboard-wrapper">
-      {/* En-tête Pro avec Profil et Jetons */}
+      {/* En-tête Simplifié */}
       <div className="dashboard-header">
         <div className="header-left">
           <h2>Tableau de bord</h2>
-          <p>Heureux de vous revoir, {user.username || 'Utilisateur'}</p>
         </div>
         
         <div className="header-right">
-          {/* Groupe Crédits & Achat */}
-          <div className="credits-group">
-            <div className="credits-info">
-              <span className="credits-amount">{user.tokens || 0}</span>
-              <span className="credits-label">crédits</span>
-            </div>
-            <button className="btn-recharge" onClick={handleRechargeClick}>
-              + Recharger
-            </button>
+          <div className="credits-simple" onClick={handleRechargeClick}>
+            <span className="credits-amount">{user.tokens || 0}</span>
+            <span className="credits-label">crédits</span>
+            <div className="credits-plus">+</div>
           </div>
           
-          <div className="header-separator"></div>
-
-          {/* Profil & Logout */}
-          <div className="user-profile-group">
-             <div className="avatar-small">
-                {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
-             </div>
-             <button className="btn btn-login" onClick={handleLogout} style={{padding: '0.4rem 0.8rem', fontSize: '0.85rem'}}>
-                Déconnexion
-             </button>
-          </div>
+          <button className="btn-logout-simple" onClick={handleLogout}>
+             Déconnexion
+          </button>
         </div>
       </div>
 

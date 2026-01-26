@@ -467,6 +467,55 @@ header {
     gap: 1.5rem;
 }
 
+/* Nouveaux styles simplifiés pour le header */
+.credits-simple {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: rgba(30, 41, 59, 0.5);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.credits-simple:hover {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.credits-plus {
+    background: var(--primary);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.btn-logout-simple {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-logout-simple:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
 .header-left h2 {
     font-size: 1.8rem;
     margin: 0;
@@ -634,22 +683,14 @@ header {
     .dashboard-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 1rem;
     }
     .header-right {
         width: 100%;
         justify-content: space-between;
-        margin-top: 1rem;
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .credits-group {
-        justify-content: space-between;
-    }
-    .header-separator {
-        display: none;
-    }
-    .user-profile-group {
-        justify-content: space-between;
+        margin-top: 0;
+        flex-direction: row;
+        align-items: center;
     }
     .projects-section {
         padding: 1rem;
