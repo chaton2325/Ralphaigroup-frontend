@@ -166,18 +166,34 @@ function Dashboard({ onNavigate }) {
         <div className="modal-overlay">
           <div className="modal-content">
             <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
-            <h2 style={{ textAlign: 'center', fontSize: '2rem', marginBottom: '0.5rem' }}>Recharger vos crédits</h2>
-            <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '2rem' }}>Choisissez le pack qui correspond à vos besoins</p>
+            <div className="modal-header">
+              <h2 className="modal-title">Recharger vos crédits</h2>
+              <p className="modal-subtitle">Choisissez le pack qui correspond à vos besoins</p>
+            </div>
             
             <div className="packages-grid">
-              {packages.map((pkg) => (
-                <div key={pkg.id} className="package-card">
-                  <h3 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0' }}>{pkg.name}</h3>
-                  <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>{(pkg.price / 100).toFixed(2)}€</div>
-                  <div style={{ fontSize: '1.2rem', color: 'var(--primary)', fontWeight: '600', margin: '1rem 0' }}>{pkg.tokens} Jetons</div>
-                  <button className="btn btn-signup" onClick={() => handleBuyPackage(pkg.id)} style={{ width: '100%', marginTop: '1rem' }}>Choisir</button>
+              {packages.map((pkg, index) => (
+                <div key={pkg.id} className={`package-card ${index === 1 ? 'popular' : ''}`}>
+                  {index === 1 && <div className="popular-badge">Populaire</div>}
+                  <h3 className="package-name">{pkg.name}</h3>
+                  <div className="package-price">{(pkg.price / 100).toFixed(2)}€</div>
+                  <div className="package-tokens">
+                    <span className="token-icon">⚡</span>
+                    {pkg.tokens} Jetons
+                  </div>
+                  <ul className="package-features">
+                    <li>✅ Génération rapide</li>
+                    <li>✅ Qualité HD</li>
+                    <li>✅ Support prioritaire</li>
+                  </ul>
+                  <button className="btn-package-select" onClick={() => handleBuyPackage(pkg.id)} disabled={loading}>
+                    {loading ? '...' : 'Choisir ce pack'}
+                  </button>
                 </div>
               ))}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-modal-close-bottom" onClick={() => setShowModal(false)}>Fermer</button>
             </div>
           </div>
         </div>
