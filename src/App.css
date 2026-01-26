@@ -277,23 +277,81 @@ header {
 }
 
 /* Auth Pages (Login/Signup) */
-.auth-container {
+/* Nouvelle structure Split Screen */
+.auth-split-container {
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    background-color: var(--bg-body);
+    width: 100%;
+    min-height: calc(100vh - 80px); /* Prend toute la hauteur moins le header */
 }
 
+.auth-left {
+    flex: 1;
+    background-color: var(--bg-body); /* Fond sombre à gauche */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+}
+
+/* Effet de lueur décoratif à gauche */
+.auth-left::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.auth-brand-logo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.4);
+    border: 2px solid rgba(255,255,255,0.1);
+}
+
+.auth-brand-name {
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #fff, var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 1rem 0;
+    letter-spacing: -1px;
+}
+
+.auth-brand-desc {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    text-align: center;
+    max-width: 450px;
+    line-height: 1.6;
+}
+
+.auth-right {
+    flex: 1;
+    background-color: var(--bg-card); /* Fond carte à droite */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+/* Ajustement de la carte dans le layout split */
 .auth-card {
-    background: var(--bg-card);
+    background: transparent; /* Fond transparent car auth-right a déjà la couleur */
     padding: 2.5rem;
-    border-radius: 16px;
-    box-shadow: var(--shadow);
+    box-shadow: none;
     width: 100%;
     max-width: 400px;
-    border: 1px solid var(--border);
+    border: none;
 }
 
 .form-group {
@@ -951,5 +1009,23 @@ header {
     .btn {
         padding: 0.35rem 0.75rem;
         font-size: 0.8rem;
+    }
+    
+    /* Sur mobile, on cache la partie gauche et on remet le style carte */
+    .auth-split-container {
+        flex-direction: column;
+    }
+    .auth-left {
+        display: none;
+    }
+    .auth-right {
+        background-color: var(--bg-body);
+        padding: 1rem;
+    }
+    .auth-card {
+        background: var(--bg-card);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        border-radius: 16px;
     }
 }
