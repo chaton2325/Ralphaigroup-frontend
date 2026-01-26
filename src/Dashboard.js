@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Video,
+  Zap,
+  Sparkles,
+  ArrowRight,
+  Plus,
+  History,
+  X,
+  CheckCircle2,
+  Trophy,
+  LogOut
+} from 'lucide-react';
 import api from './services/api';
 
 function Dashboard({ onNavigate }) {
-  // Récupération des infos utilisateur stockées lors du login
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
-  
-  // États pour la gestion des paiements
   const [packages, setPackages] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,17 +27,14 @@ function Dashboard({ onNavigate }) {
     onNavigate('home');
   };
 
-  // Charger l'historique récent et le solde de jetons
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Historique
         const historyResponse = await api.get('/video/history');
         const history = historyResponse.data.history || [];
         setTotalVideos(history.length);
         setRecentVideos(history.slice(0, 3));
 
-        // 2. Solde de jetons
         const balanceResponse = await api.get('/users/balance');
         if (balanceResponse.data.tokens !== undefined) {
           setUser(prevUser => {
@@ -44,7 +50,6 @@ function Dashboard({ onNavigate }) {
     fetchData();
   }, []);
 
-  // Récupérer les packs depuis l'API
   const handleRechargeClick = async () => {
     setLoading(true);
     try {
@@ -58,13 +63,12 @@ function Dashboard({ onNavigate }) {
     }
   };
 
-  // Lancer le processus de paiement
   const handleBuyPackage = async (packageId) => {
     setLoading(true);
     try {
       const response = await api.post('/payment/create-session', { packageId, email: user.email });
       if (response.data.url) {
-        window.location.href = response.data.url; // Redirection vers Stripe
+        window.location.href = response.data.url;
       }
     } catch (err) {
       alert(err.response?.data?.message || "Erreur lors de l'initialisation du paiement.");
@@ -74,80 +78,71 @@ function Dashboard({ onNavigate }) {
 
   return (
     <div className="dashboard-wrapper">
-      {/* En-tête Simplifié */}
-      <div className="dashboard-header">
+      <div className="dashboard-header reveal">
         <div className="header-left">
           <h2>Tableau de bord</h2>
         </div>
-        
+
         <div className="header-right">
-          <div className="credits-simple" onClick={handleRechargeClick}>
+          <div className="credits-simple reveal" onClick={handleRechargeClick}>
             <span className="credits-amount">{user.tokens || 0}</span>
-            <span className="credits-label">crédits</span>
-            <div className="credits-plus">+</div>
+            <span className="credits-label">jetons</span>
+            <div className="credits-plus"><Plus size={14} /></div>
           </div>
-          
+
           <button className="btn-logout-simple" onClick={handleLogout}>
-             Déconnexion
+            <LogOut size={16} style={{ marginRight: '8px' }} />
+            Déconnexion
           </button>
         </div>
       </div>
 
-      {/* Grille de Statistiques & Actions */}
       <div className="dashboard-stats-grid">
-        {/* Carte : Total Vidéos */}
-        <div className="stat-card">
-          <div className="stat-icon">📹</div>
+        <div className="stat-card reveal">
+          <div className="stat-icon"><Video size={24} /></div>
           <div className="stat-content">
             <h3>Vidéos Totales</h3>
             <p className="stat-value">{totalVideos}</p>
           </div>
         </div>
 
-        {/* Carte : Crédits */}
-        <div className="stat-card" onClick={handleRechargeClick} style={{cursor: 'pointer'}}>
-          <div className="stat-icon">⚡</div>
+        <div className="stat-card reveal" onClick={handleRechargeClick} style={{ cursor: 'pointer' }}>
+          <div className="stat-icon"><Zap size={24} /></div>
           <div className="stat-content">
-            <h3>Crédits Dispo</h3>
+            <h3>Jetons Dispo</h3>
             <p className="stat-value">{user.tokens || 0}</p>
           </div>
-          <div style={{fontSize: '1.2rem', color: 'var(--primary)'}}>+</div>
+          <Plus size={18} color="var(--accent)" />
         </div>
 
-        {/* Carte : Nouvelle Création */}
-        <div className="stat-card create-action" onClick={() => onNavigate('create')}>
-          <div className="stat-icon">✨</div>
+        <div className="stat-card create-action reveal" onClick={() => onNavigate('create')}>
+          <div className="stat-icon"><Sparkles size={24} /></div>
           <div className="stat-content">
-            <h3>Nouvelle Création</h3>
+            <h3>Studio Créatif</h3>
             <p className="stat-desc">Générer une vidéo</p>
           </div>
-          <div className="action-arrow">→</div>
+          <div className="action-arrow"><ArrowRight size={20} /></div>
         </div>
       </div>
 
-      {/* Section Projets Récents */}
-      <div className="projects-section">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.5rem', margin: 0, color: 'var(--text-main)' }}>Vos projets récents</h3>
-          <button className="btn btn-login" onClick={() => onNavigate('projects')} style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}>Voir tout l'historique</button>
+      <div className="projects-section reveal" style={{ marginTop: '3rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h3 style={{ fontSize: '1.5rem', margin: 0, color: 'var(--text-main)' }}>Projets récents</h3>
+          <button className="btn-apple-secondary sm" onClick={() => onNavigate('projects')}>
+            <History size={16} style={{ marginRight: '8px' }} />
+            Historique complet
+          </button>
         </div>
-        
+
         {recentVideos.length === 0 ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '3rem', 
-            color: 'var(--text-muted)', 
-            border: '2px dashed #e5e7eb', 
-            borderRadius: '12px' 
-          }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>🎬</div>
-            <p style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>Vous n'avez pas encore généré de vidéo.</p>
-            <p style={{ fontSize: '0.9rem' }}>Vos futures créations apparaîtront ici.</p>
+          <div className="empty-state reveal">
+            <Video size={48} strokeWidth={1} opacity={0.3} style={{ marginBottom: '1rem' }} />
+            <p>Aucune vidéo pour le moment.</p>
           </div>
         ) : (
           <div className="projects-grid">
             {recentVideos.map((video) => (
-              <div key={video.id} className="project-card">
+              <div key={video.id} className="project-card reveal">
                 <div className="video-wrapper">
                   <video controls src={video.video_url} width="100%" height="100%" style={{ objectFit: 'cover' }} />
                 </div>
@@ -161,33 +156,32 @@ function Dashboard({ onNavigate }) {
         )}
       </div>
 
-      {/* Modale de sélection des packs */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
+        <div className="modal-overlay reveal">
+          <div className="modal-content glass reveal">
+            <button className="close-btn" onClick={() => setShowModal(false)}><X size={20} /></button>
             <div className="modal-header">
-              <h2 className="modal-title">Recharger vos crédits</h2>
-              <p className="modal-subtitle">Choisissez le pack qui correspond à vos besoins</p>
+              <h2 className="modal-title">Recharger vos jetons</h2>
+              <p className="modal-subtitle">Propulsez vos projets avec nos packs haute performance</p>
             </div>
-            
+
             <div className="packages-grid">
               {packages.map((pkg, index) => (
-                <div key={pkg.id} className={`package-card ${index === 1 ? 'popular' : ''}`}>
-                  {index === 1 && <div className="popular-badge">Populaire</div>}
+                <div key={pkg.id} className={`package-card reveal ${index === 1 ? 'popular' : ''}`}>
+                  {index === 1 && <div className="popular-badge"><Trophy size={12} style={{ marginRight: '4px' }} /> Populaire</div>}
                   <h3 className="package-name">{pkg.name}</h3>
                   <div className="package-price">{(pkg.price / 100).toFixed(2)}€</div>
                   <div className="package-tokens">
-                    <span className="token-icon">⚡</span>
+                    <Zap size={18} className="token-icon" style={{ fill: 'currentColor' }} />
                     {pkg.tokens} Jetons
                   </div>
                   <ul className="package-features">
-                    <li>✅ Génération rapide</li>
-                    <li>✅ Qualité HD</li>
-                    <li>✅ Support prioritaire</li>
+                    <li><CheckCircle2 size={16} color="var(--accent)" /> Génération priorité</li>
+                    <li><CheckCircle2 size={16} color="var(--accent)" /> Qualité Ultra HD</li>
+                    <li><CheckCircle2 size={16} color="var(--accent)" /> Support Expert</li>
                   </ul>
                   <button className="btn-package-select" onClick={() => handleBuyPackage(pkg.id)} disabled={loading}>
-                    {loading ? '...' : 'Choisir ce pack'}
+                    {loading ? 'Traitement...' : 'Choisir ce pack'}
                   </button>
                 </div>
               ))}
