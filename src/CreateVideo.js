@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from './services/api';
 
 function CreateVideo({ onNavigate }) {
+  // --- States existants conservés ---
   const [prompt, setPrompt] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [cloudinaryUrl, setCloudinaryUrl] = useState('');
+  // Options par défaut
   const [aspectRatio, setAspectRatio] = useState('pc');
   const [language, setLanguage] = useState('fr');
   const [loading, setLoading] = useState(false);
@@ -16,6 +18,23 @@ function CreateVideo({ onNavigate }) {
   const [packages, setPackages] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+
+  // --- Nouveaux States pour le Chat ---
+  const [messages, setMessages] = useState([]);
+  const messagesEndRef = useRef(null);
+
+  // Initialisation du message de bienvenue
+  useEffect(() => {
+    setMessages([{
+      id: 'welcome',
+      type: 'bot',
+      content: "Salut ! 👋 Je suis l'IA créative de Ralp-AI. \n\nDécrivez votre idée, choisissez le format et la langue ci-dessous, et je génère votre vidéo (8s) instantanément.",
+    }]);
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading, previewUrl]);
 
   const handleRemoveImage = () => {
     setImageFile(null);
@@ -75,51 +94,77 @@ function CreateVideo({ onNavigate }) {
 
   const handlePromptChange = (e) => {
     const text = e.target.value;
-    const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
-    if (wordCount <= 300) {
-      setPrompt(text);
-    }
+    setPrompt(text);
   };
 
-  const handleSubmit = async (e) => {
+  // Gestion de l'envoi du message (Génération)
+  const handleChatSubmit = async (e) => {
     e.preventDefault();
-    if (uploadingImage) return;
+    if ((!prompt.trim() && !cloudinaryUrl) || uploadingImage || loading) return;
 
+    // Vérification des jetons
     if ((user.tokens || 0) < 10) {
-      setError("Vous n'avez pas assez de jetons. Le coût est de 10 jetons par vidéo. Veuillez recharger votre compte.");
+      setMessages(prev => [...prev, { 
+        id: Date.now(), 
+        type: 'bot', 
+        content: "⚠️ Vous n'avez pas assez de jetons (10 requis). Veuillez recharger votre compte.",
+        isError: true 
+      }]);
       handleRechargeClick();
       return;
     }
 
+    // 1. Ajouter le message de l'utilisateur
+    const userMsg = {
+      id: Date.now(),
+      type: 'user',
+      content: prompt,
+      image: previewUrl,
+      settings: { aspectRatio, language }
+    };
+    setMessages(prev => [...prev, userMsg]);
+
+    // Sauvegarde des valeurs pour l'appel API
+    const apiPrompt = prompt;
+    const apiImage = cloudinaryUrl;
+    const apiRatio = aspectRatio;
+    const apiLang = language;
+
+    // Reset de l'input
+    setPrompt('');
+    setImageFile(null);
+    setPreviewUrl('');
+    setCloudinaryUrl('');
     setLoading(true);
     setError('');
-    setGeneratedVideo(null);
 
     try {
       let response;
 
-      if (cloudinaryUrl) {
-        // 2. Envoi JSON avec l'URL de l'image (Format API n°16)
+      if (apiImage) {
         response = await api.post('/video/generate', {
-          prompt,
+          prompt: apiPrompt,
           duration: '8',
-          aspectRatio,
-          language,
-          imageUrl: cloudinaryUrl
+          aspectRatio: apiRatio,
+          language: apiLang,
+          imageUrl: apiImage
         });
-      } else if (imageFile) {
-        throw new Error("L'image n'a pas été uploadée correctement. Veuillez réessayer.");
       } else {
-        // Cas sans image : FormData (Format API n°15)
         const formData = new FormData();
-        formData.append('prompt', prompt);
+        formData.append('prompt', apiPrompt);
         formData.append('duration', '8');
-        formData.append('aspectRatio', aspectRatio);
-        formData.append('language', language);
+        formData.append('aspectRatio', apiRatio);
+        formData.append('language', apiLang);
         response = await api.post('/video/generate', formData);
       }
 
-      setGeneratedVideo(response.data.url);
+      // 2. Ajouter la réponse du bot (Vidéo)
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        type: 'bot',
+        videoUrl: response.data.url,
+        content: "Voici votre vidéo ! 🎉"
+      }]);
 
       // Mise à jour des jetons utilisateur si renvoyés par l'API
       if (response.data.tokens_remaining !== undefined) {
@@ -130,7 +175,12 @@ function CreateVideo({ onNavigate }) {
 
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Erreur lors de la génération de la vidéo.");
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: err.response?.data?.message || "Une erreur est survenue lors de la génération.",
+        isError: true
+      }]);
     } finally {
       setLoading(false);
     }
@@ -162,149 +212,124 @@ function CreateVideo({ onNavigate }) {
     }
   };
 
-  const wordCount = prompt.trim().split(/\s+/).filter(w => w.length > 0).length;
-
   return (
-    <div className="dashboard-wrapper">
-      <div className="dashboard-header">
-        <div>
-          <h2 style={{ fontSize: '2rem', margin: 0, color: 'var(--text-main)' }}>Nouvelle Création</h2>
-          <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0' }}>Décrivez votre idée et laissez l'IA générer la vidéo.</p>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-          <div className="token-badge">
-             <span>{user.tokens || 0} Crédits</span>
-             <button className="btn-add-token" onClick={handleRechargeClick} disabled={paymentLoading} title="Recharger">+</button>
+    <div className="dashboard-wrapper chat-mode-wrapper">
+      {/* Header Chat Simplifié */}
+      <div className="chat-header-simple">
+        <div className="chat-header-info">
+          <div className="bot-avatar">🤖</div>
+          <div>
+            <h3>Assistant Vidéo</h3>
+            <span className="status-dot"></span> <small>En ligne • {user.tokens || 0} crédits</small>
           </div>
-          <small style={{ color: 'var(--text-muted)' }}>Coût : 10 jetons / vidéo</small>
         </div>
-        <button className="btn btn-login" onClick={() => onNavigate('dashboard')}>Retour</button>
+        <button className="btn-add-token-small" onClick={handleRechargeClick}>+</button>
       </div>
 
-      <div className="create-container">
-        <form onSubmit={handleSubmit} className="create-form">
-          {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
-          
-          <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <label style={{ marginBottom: 0 }}>Description de la vidéo (Prompt)</label>
-              <span style={{ fontSize: '0.85rem', color: wordCount >= 300 ? 'red' : 'var(--text-muted)' }}>{wordCount}/300 mots</span>
+      {/* Zone de Messages */}
+      <div className="chat-messages">
+        {messages.map((msg) => (
+          <div key={msg.id} className={`message ${msg.type}`}>
+            <div className="message-avatar">
+              {msg.type === 'bot' ? '🤖' : <div className="user-avatar-placeholder">👤</div>}
             </div>
-            <p style={{ fontSize: '0.9rem', color: '#2563eb', marginBottom: '0.8rem', background: '#eff6ff', padding: '0.5rem', borderRadius: '6px' }}>
-              💡 Conseil : Soyez descriptif au maximum ! Détaillez l'ambiance, l'éclairage, les mouvements et le style visuel pour un meilleur résultat. Si vous utilisez une image décrivez a quoi elle va servir dans la vidéo et ne dépassez pas les 300 mots
-            </p>
-            <textarea 
-              value={prompt} 
-              onChange={handlePromptChange} 
-              placeholder="Ex: Une publicité futuriste pour une boisson énergisante..." 
-              rows="4"
-              required
-              style={{ width: '100%', padding: '1rem', borderRadius: '8px', border: '1px solid #e5e7eb', fontFamily: 'inherit' }}
-            />
-          </div>
+            <div className={`message-content ${msg.isError ? 'error-msg' : ''}`}>
+              {msg.image && (
+                <div className="message-image-attachment">
+                  <img src={msg.image} alt="Reference" />
+                </div>
+              )}
+              
+              {msg.content && <div style={{whiteSpace: 'pre-wrap'}}>{msg.content}</div>}
+              
+              {msg.videoUrl && (
+                <div className="message-video-attachment">
+                  <video controls src={msg.videoUrl} autoPlay muted loop playsInline />
+                  <a href={msg.videoUrl} download className="download-link">⬇️ Télécharger</a>
+                </div>
+              )}
 
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 1 }}>
-              <label>Image de référence (Importer)</label>
-              <input 
-                type="file" 
-                accept=".jpg, .jpeg" 
-                onChange={handleImageChange} 
-                key={previewUrl ? 'loaded' : 'empty'}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e5e7eb' }} 
-              />
-              <small style={{ color: '#ef4444', display: 'block', marginTop: '0.2rem' }}>⚠️ Uniquement JPG ou JPEG.</small>
-              {previewUrl && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  <div style={{ width: '100px', height: '60px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
-                    <img 
-                      src={previewUrl} 
-                      alt="Prévisualisation" 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                      onError={() => setError("Impossible de charger l'image depuis le lien généré.")}
-                    />
-                  </div>
-
-                  <button 
-                    type="button" 
-                    onClick={handleRemoveImage}
-                    style={{ 
-                      marginTop: '0.5rem', 
-                      background: '#fee2e2', 
-                      color: '#ef4444', 
-                      border: 'none', 
-                      padding: '0.25rem 0.5rem', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer', 
-                      fontSize: '0.8rem',
-                      fontWeight: '600'
-                    }}
-                  >
-                    Supprimer
-                  </button>
+              {msg.settings && (
+                <div className="message-meta">
+                  <span>{msg.settings.aspectRatio === 'pc' ? '📺 16:9' : '📱 9:16'}</span>
+                  <span>{msg.settings.language === 'fr' ? '🇫🇷 FR' : '🇬🇧 EN'}</span>
+                  <span>⏱️ 8s</span>
                 </div>
               )}
             </div>
-
-            <div className="form-group" style={{ width: '150px' }}>
-              <label>Format</label>
-              <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <option value="pc">Paysage (16:9) (Réels tiktok , instagram etc) </option>
-                <option value="mobile">Portrait (9:16) (videos au format pc) </option>
-              </select>
-            </div>
-
-            <div className="form-group" style={{ width: '150px' }}>
-              <label>Durée</label>
-              <input type="text" value="8 secondes" disabled style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e5e7eb', background: '#f3f4f6', color: '#6b7280' }} />
-            </div>
-
-            <div className="form-group" style={{ width: '150px' }}>
-              <label>Langue</label>
-              <select value={language} onChange={(e) => setLanguage(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <option value="fr">Français</option>
-                <option value="en">Anglais</option>
-                <option value="es">Espagnol</option>
-              </select>
-            </div>
           </div>
-
-          <button type="submit" className="btn btn-signup" disabled={loading || uploadingImage} style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', marginTop: '1rem', opacity: (loading || uploadingImage) ? 0.7 : 1 }}>
-            {loading ? 'Génération en cours...' : 'Générer la vidéo'}
-          </button>
-        </form>
-
-        {generatedVideo && (
-          <div className="result-container">
-            <h3>Résultat</h3>
-            <div className="video-wrapper" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-              <video controls src={generatedVideo} width="100%" height="100%" autoPlay />
+        ))}
+        
+        {loading && (
+          <div className="message bot">
+            <div className="message-avatar">🤖</div>
+            <div className="message-content loading-bubble">
+              <span className="dot"></span><span className="dot"></span><span className="dot"></span>
             </div>
-            <a href={generatedVideo} download className="btn btn-login" style={{ display: 'inline-block', marginTop: '1rem', textDecoration: 'none' }}>Télécharger la vidéo</a>
           </div>
         )}
+        <div ref={messagesEndRef} />
       </div>
 
-      {loading && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '450px', textAlign: 'center' }}>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Création de la vidéo en cours...</h3>
-            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>Ne quittez pas s'il vous plaît.</p>
-            <div style={{ marginTop: '1rem', fontSize: '3rem' }}>⏳</div>
+      {/* Zone de Saisie (Input Area) */}
+      <div className="chat-input-area">
+        {/* Prévisualisation Image Uploadée */}
+        {previewUrl && (
+          <div className="input-image-preview">
+            <img src={previewUrl} alt="Preview" />
+            <button onClick={handleRemoveImage} className="btn-remove-img">×</button>
           </div>
-        </div>
-      )}
+        )}
 
-      {uploadingImage && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '450px', textAlign: 'center' }}>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Upload de l'image en cours...</h3>
-            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>Veuillez patienter s'il vous plaît.</p>
-            <div style={{ marginTop: '1rem', fontSize: '3rem' }}>📤</div>
-          </div>
-        </div>
-      )}
+        {/* Barre d'options */}
+        <div className="chat-options-bar">
+          <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} className="chat-option-select">
+            <option value="pc">📺 Paysage (16:9)</option>
+            <option value="mobile">📱 Portrait (9:16)</option>
+          </select>
+          
+          <select value={language} onChange={(e) => setLanguage(e.target.value)} className="chat-option-select">
+            <option value="fr">🇫🇷 FR</option>
+            <option value="en">🇬🇧 EN</option>
+            <option value="es">🇪🇸 ES</option>
+          </select>
 
+          <div className="chat-option-badge">⏱️ 8s</div>
+        </div>
+
+        {/* Formulaire d'envoi */}
+        <form onSubmit={handleChatSubmit} className="chat-input-row">
+          <label className="btn-upload-icon" title="Ajouter une image">
+            📷
+            <input 
+              type="file" 
+              accept=".jpg, .jpeg" 
+              onChange={handleImageChange} 
+              style={{display: 'none'}}
+            />
+          </label>
+
+          <textarea 
+            value={prompt} 
+            onChange={handlePromptChange} 
+            placeholder={uploadingImage ? "Upload en cours..." : "Décrivez votre vidéo..."}
+            className="chat-textarea"
+            rows="1"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleChatSubmit(e);
+              }
+            }}
+          />
+          
+          <button type="submit" className="btn-send-chat" disabled={loading || uploadingImage || (!prompt.trim() && !cloudinaryUrl)}>
+            ➤
+          </button>
+        </form>
+      </div>
+
+      {/* Modal Paiement (inchangé) */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
