@@ -43,9 +43,26 @@ function CreateVideo({ onNavigate }) {
     }]);
   }, []);
 
-  useEffect(() => {
+  // État pour suivre si l'utilisateur a fait défiler manuellement
+  const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
+
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading, previewUrl]);
+  };
+
+  // Gestionnaire de défilement pour détecter quand l'utilisateur fait défiler manuellement
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    const atBottom = scrollHeight - scrollTop <= clientHeight + 1;
+    setIsScrolledToBottom(atBottom);
+  };
+
+  useEffect(() => {
+    // Ne faire défiler automatiquement que si l'utilisateur est déjà en bas
+    if (isScrolledToBottom) {
+      scrollToBottom();
+    }
+  }, [messages, loading, previewUrl, isScrolledToBottom]);
 
   const handleRemoveImage = () => {
     setImageFile(null);
@@ -204,7 +221,7 @@ function CreateVideo({ onNavigate }) {
         <button className="btn-add-token-small" onClick={handleRechargeClick}><Zap size={14} fill="currentColor" /></button>
       </div>
 
-      <div className="chat-messages">
+      <div className="chat-messages" onScroll={handleScroll}>
         {messages.map((msg) => (
           <div key={msg.id} className={`message ${msg.type} reveal`}>
             <div className="message-avatar">

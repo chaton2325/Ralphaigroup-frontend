@@ -2067,11 +2067,52 @@ body {
     color: var(--text-main);
     font-size: 0.85rem;
     cursor: pointer;
+    appearance: none; /* Supprime l'apparence par défaut du navigateur */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2386868b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 36px; /* Espace pour l'icône de flèche personnalisée */
 }
 
 .chat-option-select:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.2);
+}
+
+/* Styles pour les options de la liste déroulante */
+.chat-option-select option {
+    background: var(--bg-card);
+    color: var(--text-main);
+    padding: 8px;
+}
+
+/* Amélioration du contraste pour les options au survol */
+.chat-option-select option:hover,
+.chat-option-select option:checked {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* Contraste élevé pour l'accessibilité */
+@media (prefers-contrast: high) {
+    .chat-option-select {
+        border-width: 2px;
+        background-color: var(--bg-card);
+        color: var(--text-main);
+    }
+
+    .chat-option-select option {
+        background: var(--bg-main);
+        color: var(--text-main);
+    }
+
+    .chat-option-select option:hover,
+    .chat-option-select option:checked {
+        background: var(--accent);
+        color: #000;
+    }
 }
 
 .chat-option-badge {
