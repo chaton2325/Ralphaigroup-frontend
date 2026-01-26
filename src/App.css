@@ -491,20 +491,52 @@ header {
     padding: 0.5rem 1rem;
     border-radius: 999px;
     font-weight: 700;
+}
+
+.credits-group {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     border: 1px solid rgba(99, 102, 241, 0.3);
     white-space: nowrap;
+    gap: 1rem;
+    background: rgba(30, 41, 59, 0.5); /* Fond subtil */
+    padding: 0.5rem 0.75rem 0.5rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
 }
 
-.btn-add-token {
+
+.credits-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.credits-amount {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--primary);
+}
+
+.credits-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-recharge {
     background: var(--primary);
     color: white;
     border: none;
     width: 24px;
     height: 24px;
     border-radius: 50%;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -512,10 +544,21 @@ header {
     font-size: 1.2rem;
     line-height: 1;
     transition: background 0.2s;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
 
-.btn-add-token:hover {
+
+.btn-recharge:hover {
     background: var(--primary-dark);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+}
+
+.header-separator {
+    width: 1px;
+    height: 32px;
+    background: var(--border);
+    margin: 0 0.5rem;
 }
 
 .user-profile-group {
@@ -596,6 +639,17 @@ header {
         width: 100%;
         justify-content: space-between;
         margin-top: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .credits-group {
+        justify-content: space-between;
+    }
+    .header-separator {
+        display: none;
+    }
+    .user-profile-group {
+        justify-content: space-between;
     }
     .projects-section {
         padding: 1rem;
@@ -1027,5 +1081,90 @@ header {
         box-shadow: var(--shadow);
         border: 1px solid var(--border);
         border-radius: 16px;
+    }
+}
+
+/* --- MOBILE NAVIGATION (BOTTOM BAR) --- */
+.mobile-nav {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 70px;
+        background: rgba(30, 41, 59, 0.95); /* var(--bg-card) with opacity */
+        backdrop-filter: blur(12px);
+        border-top: 1px solid var(--border);
+        justify-content: space-around;
+        align-items: center;
+        z-index: 999;
+        padding-bottom: env(safe-area-inset-bottom);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .mobile-nav-item {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        padding: 0.5rem;
+        flex: 1;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .mobile-nav-item.active {
+        color: var(--primary);
+    }
+
+    .nav-icon {
+        font-size: 1.4rem;
+        margin-bottom: 4px;
+        transition: transform 0.2s;
+    }
+
+    .mobile-nav-item.active .nav-icon {
+        transform: translateY(-2px);
+    }
+
+    .nav-icon-highlight {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        font-weight: 300;
+        margin-bottom: 4px;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4);
+        transform: translateY(-10px);
+        border: 3px solid var(--bg-body);
+    }
+
+    .mobile-nav-item.active .nav-icon-highlight {
+        transform: translateY(-12px) scale(1.05);
+        box-shadow: 0 6px 15px rgba(236, 72, 153, 0.4);
+    }
+
+    .nav-label {
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+
+    /* Ajustement du contenu principal pour ne pas être caché par la nav */
+    .main-content {
+        padding-bottom: 90px;
     }
 }

@@ -80,12 +80,19 @@ function Dashboard({ onNavigate }) {
         </div>
         
         <div className="header-right">
-          {/* Badge Jetons */}
-          <div className="token-badge">
-             <span>{user.tokens || 0} Crédits</span>
-             <button className="btn-add-token" onClick={handleRechargeClick} title="Recharger">+</button>
+          {/* Groupe Crédits & Achat */}
+          <div className="credits-group">
+            <div className="credits-info">
+              <span className="credits-amount">{user.tokens || 0}</span>
+              <span className="credits-label">crédits</span>
+            </div>
+            <button className="btn-recharge" onClick={handleRechargeClick}>
+              + Recharger
+            </button>
           </div>
           
+          <div className="header-separator"></div>
+
           {/* Profil & Logout */}
           <div className="user-profile-group">
              <div className="avatar-small">

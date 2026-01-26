@@ -173,6 +173,35 @@ function App() {
           {renderContent()}
           <Footer />
         </div>
+
+        {/* Navigation Mobile (Bottom Bar) - Visible uniquement sur mobile via CSS */}
+        <nav className="mobile-nav">
+          <button 
+            className={`mobile-nav-item ${currentPage === 'dashboard' ? 'active' : ''}`} 
+            onClick={() => setCurrentPage('dashboard')}
+          >
+            <span className="nav-icon">📊</span>
+            <span className="nav-label">Accueil</span>
+          </button>
+          
+          <button 
+            className={`mobile-nav-item ${currentPage === 'create' ? 'active' : ''}`} 
+            onClick={() => setCurrentPage('create')}
+          >
+            <div className="nav-icon-highlight">
+              <span>+</span>
+            </div>
+            <span className="nav-label">Créer</span>
+          </button>
+          
+          <button 
+            className={`mobile-nav-item ${currentPage === 'projects' ? 'active' : ''}`} 
+            onClick={() => setCurrentPage('projects')}
+          >
+            <span className="nav-icon">📁</span>
+            <span className="nav-label">Projets</span>
+          </button>
+        </nav>
       </div>
     );
   }

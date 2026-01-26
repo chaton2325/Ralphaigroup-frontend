@@ -15,23 +15,23 @@ function Sidebar({ currentPage, onNavigate }) {
           className={`nav-item ${currentPage === 'dashboard' ? 'active' : ''}`}
           onClick={() => onNavigate('dashboard')}
         >
-          📊 Tableau de bord
+          Tableau de bord
         </button>
         <button 
           className={`nav-item ${currentPage === 'create' ? 'active' : ''}`}
           onClick={() => onNavigate('create')}
         >
-          ✨ Nouvelle Création
+          Nouvelle Création
         </button>
         <button 
           className={`nav-item ${currentPage === 'projects' ? 'active' : ''}`}
           onClick={() => onNavigate('projects')}
         >
-          🎬 Mes Projets
+          Mes Projets
         </button>
       </nav>
       <div className="sidebar-footer">
-        <button className="nav-item logout" onClick={handleLogout}>🚪 Déconnexion</button>
+        <button className="nav-item logout" onClick={handleLogout}>Déconnexion</button>
       </div>
     </div>
   );
