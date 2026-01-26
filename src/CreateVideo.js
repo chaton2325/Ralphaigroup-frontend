@@ -285,7 +285,7 @@ function CreateVideo({ onNavigate }) {
           <div className="chat-option-badge">8s High Fidelity</div>
         </div>
 
-        <form onSubmit={handleChatSubmit} className="chat-input-row">
+        <form onSubmit={handleChatSubmit} className="chat-input-row lower-input">
           <label className="btn-upload-icon">
             <ImageIcon size={20} />
             <input type="file" accept=".jpg, .jpeg" onChange={handleImageChange} style={{ display: 'none' }} />
@@ -295,8 +295,13 @@ function CreateVideo({ onNavigate }) {
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={uploadingImage ? "Traitement image..." : "Expliquez votre vision..."}
             className="chat-textarea"
-            rows="1"
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleChatSubmit(e); } }}
+            rows="3"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleChatSubmit(e);
+              }
+            }}
           />
           <button type="submit" className="btn-send-chat" disabled={loading || uploadingImage || (!prompt.trim() && !cloudinaryUrl)}>
             <Send size={18} />

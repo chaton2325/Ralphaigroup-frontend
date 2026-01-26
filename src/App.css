@@ -515,8 +515,8 @@ body {
 }
 
 .chat-input-area {
-    padding: 24px;
-    margin: 24px;
+    padding: 32px 24px 14px;
+    margin: 40px 14px;
     border-radius: var(--radius-lg);
 }
 
@@ -529,6 +529,10 @@ body {
     border-radius: 100px;
 }
 
+.lower-input {
+    margin-top: 0;
+}
+
 .chat-textarea {
     flex: 1;
     background: transparent;
@@ -536,6 +540,9 @@ body {
     color: #fff;
     font-size: 1rem;
     outline: none;
+    resize: vertical;
+    min-height: 60px;
+    max-height: 150px;
 }
 
 /* --- UTILITIES --- */
@@ -1224,14 +1231,33 @@ body {
 }
 
 @keyframes typing {
-    0%, 10% { max-width: 0; }
-    50%, 60% { max-width: 200px; }
-    90%, 100% { max-width: 0; }
+
+    0%,
+    10% {
+        max-width: 0;
+    }
+
+    50%,
+    60% {
+        max-width: 200px;
+    }
+
+    90%,
+    100% {
+        max-width: 0;
+    }
 }
 
 @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
 }
 
 /* Process Animation */
@@ -1276,15 +1302,23 @@ body {
 }
 
 @keyframes spin-ring {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes pulse-glow {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
         transform: translate(-50%, -50%) scale(1);
     }
+
     50% {
         box-shadow: 0 0 40px rgba(168, 85, 247, 0.5);
         transform: translate(-50%, -50%) scale(1.1);
@@ -1319,15 +1353,41 @@ body {
     animation: bar-pulse 1s ease-in-out infinite;
 }
 
-.video-preview-bars span:nth-child(1) { height: 8px; animation-delay: 0s; }
-.video-preview-bars span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
-.video-preview-bars span:nth-child(3) { height: 12px; animation-delay: 0.2s; }
-.video-preview-bars span:nth-child(4) { height: 20px; animation-delay: 0.3s; }
-.video-preview-bars span:nth-child(5) { height: 14px; animation-delay: 0.4s; }
+.video-preview-bars span:nth-child(1) {
+    height: 8px;
+    animation-delay: 0s;
+}
+
+.video-preview-bars span:nth-child(2) {
+    height: 16px;
+    animation-delay: 0.1s;
+}
+
+.video-preview-bars span:nth-child(3) {
+    height: 12px;
+    animation-delay: 0.2s;
+}
+
+.video-preview-bars span:nth-child(4) {
+    height: 20px;
+    animation-delay: 0.3s;
+}
+
+.video-preview-bars span:nth-child(5) {
+    height: 14px;
+    animation-delay: 0.4s;
+}
 
 @keyframes bar-pulse {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
 }
 
 .video-check {
@@ -1347,10 +1407,14 @@ body {
 }
 
 @keyframes check-pop {
-    0%, 70%, 100% {
+
+    0%,
+    70%,
+    100% {
         transform: translate(-50%, -50%) scale(1);
         opacity: 1;
     }
+
     85% {
         transform: translate(-50%, -50%) scale(1.2);
         opacity: 0.8;
@@ -1857,8 +1921,15 @@ body {
 }
 
 @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .chat-status small {
@@ -1905,6 +1976,7 @@ body {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -2019,7 +2091,7 @@ body {
 /* Chat Input Area */
 .chat-input-area {
     padding: 16px 24px 24px;
-    margin: 0 16px 16px;
+    margin: 40px 16px 16px;
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border);
@@ -2067,12 +2139,14 @@ body {
     color: var(--text-main);
     font-size: 0.85rem;
     cursor: pointer;
-    appearance: none; /* Supprime l'apparence par défaut du navigateur */
+    appearance: none;
+    /* Supprime l'apparence par défaut du navigateur */
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2386868b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     background-position: right 12px center;
     background-repeat: no-repeat;
     background-size: 16px;
-    padding-right: 36px; /* Espace pour l'icône de flèche personnalisée */
+    padding-right: 36px;
+    /* Espace pour l'icône de flèche personnalisée */
 }
 
 .chat-option-select:focus {
@@ -2136,6 +2210,10 @@ body {
     transition: var(--transition);
 }
 
+.lower-input {
+    margin-top: 0;
+}
+
 .chat-input-row:focus-within {
     border-color: var(--accent);
 }
@@ -2163,10 +2241,10 @@ body {
     border: none;
     color: var(--text-main);
     font-size: 0.95rem;
-    resize: none;
+    resize: vertical;
     outline: none;
-    min-height: 24px;
-    max-height: 120px;
+    min-height: 60px;
+    max-height: 150px;
 }
 
 .chat-textarea::placeholder {
@@ -2529,11 +2607,7 @@ body {
         max-width: 90%;
     }
 
-    .chat-input-area {
-        margin: 0 8px 72px;
-        padding: 12px 16px;
-        border-radius: 16px;
-    }
+
 
     .chat-options-bar {
         gap: 6px;
@@ -2896,8 +2970,13 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .mobile-menu-sheet {
@@ -2916,6 +2995,7 @@ body {
     from {
         transform: translateY(100%);
     }
+
     to {
         transform: translateY(0);
     }
