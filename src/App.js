@@ -171,7 +171,7 @@ function App() {
         <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
         <div className="main-content">
           {renderContent()}
-          <Footer />
+          {currentPage !== 'create' && <Footer />}
         </div>
 
         {/* Navigation Mobile (Bottom Bar) - Visible uniquement sur mobile via CSS */}
