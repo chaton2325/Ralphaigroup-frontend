@@ -10,6 +10,7 @@ function Dashboard({ onNavigate }) {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [recentVideos, setRecentVideos] = useState([]);
+  const [totalVideos, setTotalVideos] = useState(0);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -23,8 +24,9 @@ function Dashboard({ onNavigate }) {
       try {
         // 1. Historique
         const historyResponse = await api.get('/video/history');
-        // On prend les 3 dernières vidéos
-        setRecentVideos((historyResponse.data.history || []).slice(0, 3));
+        const history = historyResponse.data.history || [];
+        setTotalVideos(history.length);
+        setRecentVideos(history.slice(0, 3));
 
         // 2. Solde de jetons
         const balanceResponse = await api.get('/users/balance');
@@ -105,13 +107,36 @@ function Dashboard({ onNavigate }) {
         </div>
       </div>
 
-      {/* Section Action Principale (Hero) */}
-      <div className="create-section">
-         <h3>Prêt à créer quelque chose d'unique ?</h3>
-         <p>Générez des vidéos publicitaires professionnelles en quelques secondes grâce à notre IA.</p>
-         <button className="btn-create-big" onClick={() => onNavigate('create')}>
-            + Créer une nouvelle vidéo
-         </button>
+      {/* Grille de Statistiques & Actions */}
+      <div className="dashboard-stats-grid">
+        {/* Carte : Total Vidéos */}
+        <div className="stat-card">
+          <div className="stat-icon">📹</div>
+          <div className="stat-content">
+            <h3>Vidéos Totales</h3>
+            <p className="stat-value">{totalVideos}</p>
+          </div>
+        </div>
+
+        {/* Carte : Crédits */}
+        <div className="stat-card" onClick={handleRechargeClick} style={{cursor: 'pointer'}}>
+          <div className="stat-icon">⚡</div>
+          <div className="stat-content">
+            <h3>Crédits Dispo</h3>
+            <p className="stat-value">{user.tokens || 0}</p>
+          </div>
+          <div style={{fontSize: '1.2rem', color: 'var(--primary)'}}>+</div>
+        </div>
+
+        {/* Carte : Nouvelle Création */}
+        <div className="stat-card create-action" onClick={() => onNavigate('create')}>
+          <div className="stat-icon">✨</div>
+          <div className="stat-content">
+            <h3>Nouvelle Création</h3>
+            <p className="stat-desc">Générer une vidéo</p>
+          </div>
+          <div className="action-arrow">→</div>
+        </div>
       </div>
 
       {/* Section Projets Récents */}
