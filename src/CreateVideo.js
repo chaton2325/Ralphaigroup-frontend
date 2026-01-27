@@ -27,6 +27,7 @@ function CreateVideo({ onNavigate }) {
   const [language, setLanguage] = useState('fr');
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
   const [error, setError] = useState('');
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
   const [packages, setPackages] = useState([]);
@@ -77,7 +78,7 @@ function CreateVideo({ onNavigate }) {
     if (isScrolledToBottom) {
       scrollToBottom();
     }
-  }, [messages, loading, previewUrl, isScrolledToBottom]);
+  }, [messages, loading, optimizing, previewUrl, isScrolledToBottom]);
 
   const handleRemoveImage = () => {
     setImageFile(null);
@@ -118,9 +119,35 @@ function CreateVideo({ onNavigate }) {
     }
   };
 
+  const handleOptimizePrompt = async () => {
+    if (!prompt.trim()) return;
+    const originalPrompt = prompt;
+    setOptimizing(true);
+    try {
+      const response = await fetch('https://service.ralp-ai.site/optimize-veo3', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await response.json();
+      if (data.veo3_suggestion) {
+        setPrompt(data.veo3_suggestion);
+        setMessages(prev => [...prev, {
+          id: Date.now(),
+          type: 'bot',
+          content: `⚡ **Optimisation du prompt**\n\n📝 **Original :** ${originalPrompt}\n\n✨ **Amélioré :** ${data.veo3_suggestion}\n\n(Le champ de saisie a été mis à jour)`
+        }]);
+      }
+    } catch (err) {
+      console.error("Erreur optimisation", err);
+    } finally {
+      setOptimizing(false);
+    }
+  };
+
   const handleChatSubmit = async (e) => {
     e.preventDefault();
-    if ((!prompt.trim() && !cloudinaryUrl) || uploadingImage || loading) return;
+    if ((!prompt.trim() && !cloudinaryUrl) || uploadingImage || loading || optimizing) return;
 
     if ((user.tokens || 0) < 10) {
       setMessages(prev => [...prev, {
@@ -320,7 +347,7 @@ function CreateVideo({ onNavigate }) {
             </div>
           </div>
         ))}
-        {loading && (
+        {(loading || optimizing) && (
           <div className="message bot reveal">
             <div className="message-avatar"><Bot size={20} /></div>
             <div className="message-content loading-bubble glass">
@@ -349,6 +376,27 @@ function CreateVideo({ onNavigate }) {
             <option value="en">English (EN)</option>
             <option value="es">Español (ES)</option>
           </select>
+          <button 
+            type="button"
+            onClick={handleOptimizePrompt}
+            disabled={optimizing || !prompt.trim()}
+            style={{
+              background: '#8A2BE2',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '6px 12px',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              opacity: (!prompt.trim() || optimizing) ? 0.5 : 1
+            }}
+          >
+            <Zap size={14} fill="currentColor" />
+            {optimizing ? 'Optimisation...' : 'Améliorer le prompt'}
+          </button>
           <div className="chat-option-badge">8s High Fidelity</div>
         </div>
 
@@ -370,7 +418,7 @@ function CreateVideo({ onNavigate }) {
               }
             }}
           />
-          <button type="submit" className="btn-send-chat" disabled={loading || uploadingImage || (!prompt.trim() && !cloudinaryUrl)}>
+          <button type="submit" className="btn-send-chat" disabled={loading || uploadingImage || optimizing || (!prompt.trim() && !cloudinaryUrl)}>
             <Send size={18} />
           </button>
         </form>
