@@ -59,7 +59,7 @@ function App() {
       case 'projects':
         return <Projects onNavigate={setCurrentPage} />;
       case 'create':
-        return <CreateVideo onNavigate={setCurrentPage} />;
+        return null;
       default:
         return (
           <div className="landing-page">
@@ -280,7 +280,10 @@ function App() {
       <div className="app-layout">
         <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
         <div className="main-content">
-          {renderContent()}
+          <div style={{ display: currentPage === 'create' ? 'block' : 'none', height: '100%' }}>
+            <CreateVideo onNavigate={setCurrentPage} isActive={currentPage === 'create'} />
+          </div>
+          {currentPage !== 'create' && renderContent()}
           {currentPage !== 'create' && <Footer />}
         </div>
 

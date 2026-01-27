@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import api from './services/api';
 
-function CreateVideo({ onNavigate }) {
+function CreateVideo({ onNavigate, isActive }) {
   const [prompt, setPrompt] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -79,6 +79,14 @@ function CreateVideo({ onNavigate }) {
       scrollToBottom();
     }
   }, [messages, loading, optimizing, previewUrl, isScrolledToBottom]);
+
+  useEffect(() => {
+    if (isActive) {
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      setUser(storedUser);
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [isActive]);
 
   const handleRemoveImage = () => {
     setImageFile(null);
