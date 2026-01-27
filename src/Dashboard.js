@@ -24,6 +24,8 @@ function Dashboard({ onNavigate }) {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('chat_history');
+    localStorage.removeItem('chat_pending_data');
     onNavigate('home');
   };
 

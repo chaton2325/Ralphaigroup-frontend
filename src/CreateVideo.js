@@ -32,17 +32,31 @@ function CreateVideo({ onNavigate }) {
   const [packages, setPackages] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const messagesEndRef = useRef(null);
-  const [pendingData, setPendingData] = useState(null);
-
-  useEffect(() => {
-    setMessages([{
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('chat_history');
+    return saved ? JSON.parse(saved) : [{
       id: 'welcome',
       type: 'bot',
       content: "Bienvenue dans le Studio Créatif. 👋 \n\nJe suis prêt à donner vie à vos idées. Décrivez votre concept, envoyez une photo de référence si vous le souhaitez, et je génère votre vidéo 8k haute performance.",
-    }]);
-  }, []);
+    }];
+  });
+  const messagesEndRef = useRef(null);
+  const [pendingData, setPendingData] = useState(() => {
+    const saved = localStorage.getItem('chat_pending_data');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('chat_history', JSON.stringify(messages));
+  }, [messages]);
+
+  useEffect(() => {
+    if (pendingData) {
+      localStorage.setItem('chat_pending_data', JSON.stringify(pendingData));
+    } else {
+      localStorage.removeItem('chat_pending_data');
+    }
+  }, [pendingData]);
 
   // État pour suivre si l'utilisateur a fait défiler manuellement
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
@@ -138,7 +152,8 @@ function CreateVideo({ onNavigate }) {
     setMessages(prev => [...prev, userMsg, {
       id: Date.now() + 1,
       type: 'bot',
-      content: `Voulez-vous vraiment générer la vidéo pour ce prompt : "${prompt}"${cloudinaryUrl ? ' + image' : ''} ?`,
+      content: `Voulez-vous vraiment générer la vidéo pour ce prompt : "${prompt}" ?\n\nCoût de la génération : 10 jetons.`,
+      image: cloudinaryUrl,
       isConfirmation: true
     }]);
 
