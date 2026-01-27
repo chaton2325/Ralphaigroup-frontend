@@ -34,6 +34,7 @@ function CreateVideo({ onNavigate }) {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
+  const [pendingData, setPendingData] = useState(null);
 
   useEffect(() => {
     setMessages([{
@@ -125,18 +126,37 @@ function CreateVideo({ onNavigate }) {
       image: previewUrl,
       settings: { aspectRatio, language }
     };
-    setMessages(prev => [...prev, userMsg]);
+    
+    const dataToProcess = {
+      prompt,
+      image: cloudinaryUrl,
+      aspectRatio,
+      language
+    };
+    setPendingData(dataToProcess);
 
-    const apiPrompt = prompt;
-    const apiImage = cloudinaryUrl;
-    const apiRatio = aspectRatio;
-    const apiLang = language;
+    setMessages(prev => [...prev, userMsg, {
+      id: Date.now() + 1,
+      type: 'bot',
+      content: `Voulez-vous vraiment générer la vidéo pour ce prompt : "${prompt}"${cloudinaryUrl ? ' + image' : ''} ?`,
+      isConfirmation: true
+    }]);
 
     setPrompt('');
     setImageFile(null);
     setPreviewUrl('');
     setCloudinaryUrl('');
+  };
+
+  const handleConfirm = async () => {
+    if (!pendingData) return;
+
+    setMessages(prev => prev.map(msg => 
+      msg.isConfirmation ? { ...msg, isConfirmation: false, content: "Confirmation reçue. Génération en cours..." } : msg
+    ));
+
     setLoading(true);
+    const { prompt: apiPrompt, image: apiImage, aspectRatio: apiRatio, language: apiLang } = pendingData;
 
     try {
       let response;
@@ -179,7 +199,15 @@ function CreateVideo({ onNavigate }) {
       }]);
     } finally {
       setLoading(false);
+      setPendingData(null);
     }
+  };
+
+  const handleCancel = () => {
+    setMessages(prev => prev.map(msg => 
+      msg.isConfirmation ? { ...msg, isConfirmation: false, content: "Génération annulée." } : msg
+    ));
+    setPendingData(null);
   };
 
   const handleRechargeClick = async () => {
@@ -234,6 +262,30 @@ function CreateVideo({ onNavigate }) {
                 </div>
               )}
               {msg.content && <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>}
+              {msg.isConfirmation && (
+                <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+                  <button 
+                    onClick={handleConfirm}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                      padding: '8px 16px', borderRadius: '8px', border: 'none',
+                      background: 'var(--accent)', color: 'white', cursor: 'pointer'
+                    }}
+                  >
+                    <CheckCircle2 size={16} /> Confirmer
+                  </button>
+                  <button 
+                    onClick={handleCancel}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                      padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border)',
+                      background: 'rgba(255,255,255,0.1)', color: 'var(--text-main)', cursor: 'pointer'
+                    }}
+                  >
+                    <X size={16} /> Annuler
+                  </button>
+                </div>
+              )}
               {msg.videoUrl && (
                 <div className="message-video-attachment">
                   <video controls src={msg.videoUrl} autoPlay muted loop playsInline />
