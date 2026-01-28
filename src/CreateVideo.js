@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import {
   Bot,
   User,
@@ -30,6 +32,8 @@ function CreateVideo({ onNavigate, isActive }) {
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
+  const [merging, setMerging] = useState(false);
+  const [mergeProgress, setMergeProgress] = useState(0);
   const [error, setError] = useState('');
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
   const [packages, setPackages] = useState([]);
@@ -44,6 +48,7 @@ function CreateVideo({ onNavigate, isActive }) {
     }];
   });
   const messagesEndRef = useRef(null);
+  const ffmpegRef = useRef(new FFmpeg());
   const [pendingData, setPendingData] = useState(() => {
     const saved = localStorage.getItem('chat_pending_data');
     return saved ? JSON.parse(saved) : null;
@@ -158,10 +163,78 @@ function CreateVideo({ onNavigate, isActive }) {
     }
   };
 
-  const handleMergeVideos = () => {
-    // Placeholder pour la future requête API
-    alert(`Fusion de ${generatedVideos.length} vidéos demandée. (API en attente)`);
-    // TODO: Implémenter l'appel API ici quand disponible
+  const handleMergeVideos = async () => {
+    if (merging || generatedVideos.length < 2) return;
+
+    setMerging(true);
+    setMergeProgress(0);
+    setError('');
+
+    const mergeMsgId = `merge-status-${Date.now()}`;
+    setMessages(prev => [...prev, {
+        id: mergeMsgId,
+        type: 'bot',
+        content: `Préparation de la fusion de ${generatedVideos.length} vidéos... (cela peut prendre du temps)`,
+    }]);
+
+    try {
+        const ffmpeg = ffmpegRef.current;
+        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+
+        if (!ffmpeg.loaded) {
+            ffmpeg.on('log', ({ message }) => { console.log(message); });
+            await ffmpeg.load({
+                coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+                wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+            });
+        }
+        
+        ffmpeg.on('progress', ({ progress }) => {
+            const currentProgress = Math.round(progress * 100);
+            setMergeProgress(currentProgress);
+            setMessages(prev => prev.map(msg => 
+                msg.id === mergeMsgId ? { ...msg, content: `Fusion en cours... ${currentProgress}%` } : msg
+            ));
+        });
+
+        let fileListContent = '';
+        for (let i = 0; i < generatedVideos.length; i++) {
+            const video = generatedVideos[i];
+            const fileName = `input${i}.mp4`;
+            await ffmpeg.writeFile(fileName, await fetchFile(video.videoUrl));
+            fileListContent += `file '${fileName}'\n`;
+        }
+
+        await ffmpeg.writeFile('filelist.txt', fileListContent);
+
+        await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'filelist.txt', '-c', 'copy', 'output.mp4']);
+
+        const data = await ffmpeg.readFile('output.mp4');
+        const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+
+        setMessages(prev => prev.map(msg => 
+            msg.id === mergeMsgId ? { 
+                ...msg, 
+                content: `Fusion terminée ! Voici le résultat des ${generatedVideos.length} vidéos.`,
+                videoUrl: url,
+                isMerged: true // Flag pour ne pas afficher "Générer une suite"
+            } : msg
+        ));
+
+        // TODO: Implémenter l'appel API pour enregistrer la vidéo fusionnée quand l'endpoint sera prêt.
+        // const mergedBlob = new Blob([data.buffer], { type: 'video/mp4' });
+        // const formData = new FormData();
+        // formData.append('file', mergedBlob, 'merged_video.mp4');
+        // await api.post('/video/save-merged', formData);
+
+    } catch (err) {
+        console.error("Erreur de fusion vidéo:", err);
+        setError("Une erreur est survenue lors de la fusion des vidéos. Cette opération peut être gourmande en ressources.");
+        setMessages(prev => prev.map(msg => msg.id === mergeMsgId ? { ...msg, isError: true, content: "La fusion a échoué." } : msg));
+    } finally {
+        setMerging(false);
+        setMergeProgress(0);
+    }
   };
 
   const handleRemoveImage = () => {
@@ -416,25 +489,27 @@ function CreateVideo({ onNavigate, isActive }) {
                 <div className="message-video-attachment">
                   <video controls src={msg.videoUrl} autoPlay muted loop playsInline />
                   <div style={{ display: 'flex', gap: '10px', marginTop: '8px', flexWrap: 'wrap' }}>
-                    <a href={msg.videoUrl} download className="download-link-apple">
+                    <a href={msg.videoUrl} download={`ralpai-video-${msg.id}.mp4`} className="download-link-apple">
                       <Download size={14} style={{ marginRight: '6px' }} />
                       Enregistrer
                     </a>
-                    <button 
-                      onClick={() => handleExtendVideo(msg.videoUrl)}
-                      className="download-link-apple"
-                      style={{ 
-                        background: 'rgba(255, 255, 255, 0.1)', 
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        cursor: 'pointer',
-                        color: 'inherit',
-                        fontFamily: 'inherit',
-                        fontSize: 'inherit'
-                      }}
-                    >
-                      <Film size={14} style={{ marginRight: '6px' }} />
-                      Générer une suite
-                    </button>
+                    {!msg.isMerged && (
+                      <button 
+                        onClick={() => handleExtendVideo(msg.videoUrl)}
+                        className="download-link-apple"
+                        style={{ 
+                          background: 'rgba(255, 255, 255, 0.1)', 
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          cursor: 'pointer',
+                          color: 'inherit',
+                          fontFamily: 'inherit',
+                          fontSize: 'inherit'
+                        }}
+                      >
+                        <Film size={14} style={{ marginRight: '6px' }} />
+                        Générer une suite
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -503,6 +578,7 @@ function CreateVideo({ onNavigate, isActive }) {
             <button 
               type="button"
               onClick={handleMergeVideos}
+              disabled={merging}
               style={{
                 background: 'var(--text-main)',
                 border: 'none',
@@ -512,13 +588,23 @@ function CreateVideo({ onNavigate, isActive }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                cursor: 'pointer',
+                cursor: merging ? 'not-allowed' : 'pointer',
                 fontSize: '0.8rem',
-                marginLeft: 'auto'
+                marginLeft: 'auto',
+                opacity: merging ? 0.7 : 1,
               }}
             >
-              <Layers size={14} />
-              Fusionner
+              {merging ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Fusion... {mergeProgress > 0 && `${mergeProgress}%`}
+                </>
+              ) : (
+                <>
+                  <Layers size={14} />
+                  Fusionner
+                </>
+              )}
             </button>
           )}
         </div>

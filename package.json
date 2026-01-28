@@ -20,6 +20,8 @@
     "url": "https://github.com/chaton2325/Ralphaigroup-frontend/issues"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "axios": "^1.13.2",
     "lucide-react": "^0.563.0",
     "react": "^18.2.0",
