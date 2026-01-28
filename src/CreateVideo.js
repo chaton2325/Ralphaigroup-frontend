@@ -18,7 +18,10 @@ import {
   Loader2,
   Sparkles,
   Film,
-  Layers
+  Layers,
+  ArrowUp,
+  ArrowDown,
+  Trash2
 } from 'lucide-react';
 import api from './services/api';
 
@@ -35,6 +38,7 @@ function CreateVideo({ onNavigate, isActive }) {
   const [merging, setMerging] = useState(false);
   const [mergeProgress, setMergeProgress] = useState(0);
   const [error, setError] = useState('');
+  const [mergeList, setMergeList] = useState([]);
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
   const [packages, setPackages] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -96,7 +100,7 @@ function CreateVideo({ onNavigate, isActive }) {
   }, [isActive]);
 
   // Liste des vidéos générées dans la session courante (pour la fusion)
-  const generatedVideos = messages.filter(m => m.videoUrl && !m.isError);
+  const generatedVideos = messages.filter(m => m.videoUrl && !m.isError && !m.isMerged);
 
   const handleExtendVideo = async (videoUrl) => {
     if (uploadingImage || loading) return;
@@ -163,8 +167,48 @@ function CreateVideo({ onNavigate, isActive }) {
     }
   };
 
-  const handleMergeVideos = async () => {
+  const handleMergeVideos = () => {
     if (merging || generatedVideos.length < 2) return;
+
+    setMergeList([...generatedVideos]);
+
+    setMessages(prev => [...prev, {
+      id: Date.now(),
+      type: 'bot',
+      content: `🎬 **Fusion de Séquences**\n\nOrganisez vos scènes avant la fusion finale.`,
+      isMergeConfirmation: true
+    }]);
+    setTimeout(scrollToBottom, 100);
+  };
+
+  const cancelMerge = () => {
+    setMessages(prev => prev.map(msg => 
+      msg.isMergeConfirmation ? { ...msg, isMergeConfirmation: false, content: "Fusion annulée." } : msg
+    ));
+  };
+
+  const moveVideo = (index, direction) => {
+    const newList = [...mergeList];
+    if (direction === 'up' && index > 0) {
+        [newList[index], newList[index - 1]] = [newList[index - 1], newList[index]];
+    } else if (direction === 'down' && index < newList.length - 1) {
+        [newList[index], newList[index + 1]] = [newList[index + 1], newList[index]];
+    }
+    setMergeList(newList);
+  };
+
+  const removeVideoFromMerge = (index) => {
+    const newList = [...mergeList];
+    newList.splice(index, 1);
+    setMergeList(newList);
+  };
+
+  const executeMerge = async () => {
+    setMessages(prev => prev.map(msg => 
+      msg.isMergeConfirmation ? { ...msg, isMergeConfirmation: false, content: "Fusion confirmée. Traitement en cours..." } : msg
+    ));
+
+    if (merging || mergeList.length < 2) return;
 
     setMerging(true);
     setMergeProgress(0);
@@ -174,8 +218,17 @@ function CreateVideo({ onNavigate, isActive }) {
     setMessages(prev => [...prev, {
         id: mergeMsgId,
         type: 'bot',
-        content: `Préparation de la fusion de ${generatedVideos.length} vidéos... (cela peut prendre du temps)`,
+        content: `Préparation de la fusion de ${mergeList.length} vidéos... (cela peut prendre du temps)`,
+        isProcessing: true
     }]);
+
+    const onProgress = ({ progress }) => {
+        const currentProgress = Math.round(progress * 100);
+        setMergeProgress(currentProgress);
+        setMessages(prev => prev.map(msg => 
+            msg.id === mergeMsgId ? { ...msg, content: `Fusion en cours... ${currentProgress}%`, isProcessing: true } : msg
+        ));
+    };
 
     try {
         const ffmpeg = ffmpegRef.current;
@@ -189,17 +242,11 @@ function CreateVideo({ onNavigate, isActive }) {
             });
         }
         
-        ffmpeg.on('progress', ({ progress }) => {
-            const currentProgress = Math.round(progress * 100);
-            setMergeProgress(currentProgress);
-            setMessages(prev => prev.map(msg => 
-                msg.id === mergeMsgId ? { ...msg, content: `Fusion en cours... ${currentProgress}%` } : msg
-            ));
-        });
+        ffmpeg.on('progress', onProgress);
 
         let fileListContent = '';
-        for (let i = 0; i < generatedVideos.length; i++) {
-            const video = generatedVideos[i];
+        for (let i = 0; i < mergeList.length; i++) {
+            const video = mergeList[i];
             const fileName = `input${i}.mp4`;
             await ffmpeg.writeFile(fileName, await fetchFile(video.videoUrl));
             fileListContent += `file '${fileName}'\n`;
@@ -208,29 +255,45 @@ function CreateVideo({ onNavigate, isActive }) {
         await ffmpeg.writeFile('filelist.txt', fileListContent);
 
         await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'filelist.txt', '-c', 'copy', 'output.mp4']);
+        
+        ffmpeg.off('progress', onProgress);
 
         const data = await ffmpeg.readFile('output.mp4');
-        const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+        const mergedBlob = new Blob([data.buffer], { type: 'video/mp4' });
+        let url = URL.createObjectURL(mergedBlob);
+
+        let savedToHistory = false;
+        try {
+            const formData = new FormData();
+            formData.append('file', mergedBlob, 'merged_video.mp4');
+            const response = await api.post('/video/save-merged', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            if (response.data && response.data.url) {
+                url = response.data.url;
+                savedToHistory = true;
+            }
+        } catch (saveErr) {
+            console.error("Erreur sauvegarde vidéo fusionnée:", saveErr);
+        }
 
         setMessages(prev => prev.map(msg => 
             msg.id === mergeMsgId ? { 
                 ...msg, 
-                content: `Fusion terminée ! Voici le résultat des ${generatedVideos.length} vidéos.`,
+                content: `Fusion terminée ! Voici le résultat des ${mergeList.length} vidéos.${savedToHistory ? ' (Sauvegardé dans vos projets)' : ''}`,
                 videoUrl: url,
-                isMerged: true // Flag pour ne pas afficher "Générer une suite"
+                isMerged: true, // Flag pour ne pas afficher "Générer une suite"
+                isProcessing: false
             } : msg
         ));
 
-        // TODO: Implémenter l'appel API pour enregistrer la vidéo fusionnée quand l'endpoint sera prêt.
-        // const mergedBlob = new Blob([data.buffer], { type: 'video/mp4' });
-        // const formData = new FormData();
-        // formData.append('file', mergedBlob, 'merged_video.mp4');
-        // await api.post('/video/save-merged', formData);
-
     } catch (err) {
+        ffmpegRef.current.off('progress', onProgress);
         console.error("Erreur de fusion vidéo:", err);
         setError("Une erreur est survenue lors de la fusion des vidéos. Cette opération peut être gourmande en ressources.");
-        setMessages(prev => prev.map(msg => msg.id === mergeMsgId ? { ...msg, isError: true, content: "La fusion a échoué." } : msg));
+        setMessages(prev => prev.map(msg => msg.id === mergeMsgId ? { ...msg, isError: true, content: "La fusion a échoué.", isProcessing: false } : msg));
     } finally {
         setMerging(false);
         setMergeProgress(0);
@@ -434,6 +497,45 @@ function CreateVideo({ onNavigate, isActive }) {
 
   return (
     <div className="dashboard-wrapper chat-mode-wrapper">
+      <style>{`
+        @media (max-width: 768px) {
+          .chat-input-area {
+            padding: 8px 10px !important;
+          }
+          .chat-options-bar {
+            margin-bottom: 6px !important;
+            gap: 5px !important;
+            overflow-x: auto;
+            padding-bottom: 2px;
+          }
+          .chat-options-bar::-webkit-scrollbar {
+            display: none;
+          }
+          .chat-option-select, .chat-options-bar button {
+            font-size: 11px !important;
+            padding: 4px 8px !important;
+            height: 28px !important;
+            white-space: nowrap;
+          }
+          .chat-option-badge {
+            display: none !important;
+          }
+          .chat-textarea {
+            height: 40px !important;
+            min-height: 40px !important;
+            padding: 8px 10px !important;
+            font-size: 14px !important;
+          }
+          .btn-send-chat, .btn-upload-icon {
+            width: 40px !important;
+            height: 40px !important;
+            min-width: 40px !important;
+          }
+          .chat-messages {
+            padding-bottom: 120px !important;
+          }
+        }
+      `}</style>
       <div className="chat-header-simple glass reveal">
         <div className="chat-header-info">
           <div className="bot-avatar"><Sparkles size={20} color="#fff" /></div>
@@ -460,7 +562,14 @@ function CreateVideo({ onNavigate, isActive }) {
                   <img src={msg.image} alt="Reference" />
                 </div>
               )}
-              {msg.content && <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>}
+              {msg.content && (
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                  {msg.isProcessing && (
+                    <Loader2 size={18} className="animate-spin" style={{ marginTop: '2px', flexShrink: 0 }} />
+                  )}
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>
+                </div>
+              )}
               {msg.isConfirmation && (
                 <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
                   <button 
@@ -510,6 +619,61 @@ function CreateVideo({ onNavigate, isActive }) {
                         Générer une suite
                       </button>
                     )}
+                  </div>
+                </div>
+              )}
+              {msg.isMergeConfirmation && (
+                <div style={{ marginTop: '15px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '15px' }}>
+                  <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Ordre de fusion :</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '15px' }}>
+                    {mergeList.map((video, idx) => (
+                      <div key={video.id} style={{ 
+                        display: 'flex', alignItems: 'center', gap: '10px', 
+                        background: 'rgba(255,255,255,0.05)', padding: '8px', borderRadius: '8px' 
+                      }}>
+                        <span style={{ fontWeight: 'bold', color: 'var(--text-muted)', width: '20px' }}>{idx + 1}</span>
+                        <video src={video.videoUrl} controls style={{ width: '100px', height: '60px', objectFit: 'cover', borderRadius: '4px', backgroundColor: '#000' }} />
+                        <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                          Scène {idx + 1}
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button onClick={() => moveVideo(idx, 'up')} disabled={idx === 0} style={{ padding: '4px', background: 'none', border: 'none', color: 'var(--text-main)', cursor: 'pointer', opacity: idx === 0 ? 0.3 : 1 }}>
+                            <ArrowUp size={14} />
+                          </button>
+                          <button onClick={() => moveVideo(idx, 'down')} disabled={idx === mergeList.length - 1} style={{ padding: '4px', background: 'none', border: 'none', color: 'var(--text-main)', cursor: 'pointer', opacity: idx === mergeList.length - 1 ? 0.3 : 1 }}>
+                            <ArrowDown size={14} />
+                          </button>
+                          <button onClick={() => removeVideoFromMerge(idx)} style={{ padding: '4px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {mergeList.length < 2 && <div style={{textAlign: 'center', padding: '10px', color: '#ef4444', fontSize: '0.8rem'}}>Sélectionnez au moins 2 vidéos</div>}
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button 
+                    onClick={executeMerge}
+                    disabled={mergeList.length < 2}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                      padding: '8px 16px', borderRadius: '8px', border: 'none',
+                      background: mergeList.length < 2 ? 'gray' : '#ec4899', color: 'white', 
+                      cursor: mergeList.length < 2 ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    <CheckCircle2 size={16} /> Fusionner
+                  </button>
+                  <button 
+                    onClick={cancelMerge}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                      padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border)',
+                      background: 'rgba(255,255,255,0.1)', color: 'var(--text-main)', cursor: 'pointer'
+                    }}
+                  >
+                    <X size={16} /> Annuler
+                  </button>
                   </div>
                 </div>
               )}
@@ -580,18 +744,20 @@ function CreateVideo({ onNavigate, isActive }) {
               onClick={handleMergeVideos}
               disabled={merging}
               style={{
-                background: 'var(--text-main)',
+                background: '#ec4899',
                 border: 'none',
-                borderRadius: '6px',
-                padding: '6px 12px',
-                color: 'var(--bg-primary)',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                color: 'white',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '8px',
                 cursor: merging ? 'not-allowed' : 'pointer',
-                fontSize: '0.8rem',
+                fontSize: '0.9rem',
+                fontWeight: '600',
                 marginLeft: 'auto',
                 opacity: merging ? 0.7 : 1,
+                boxShadow: '0 4px 12px rgba(236, 72, 153, 0.3)'
               }}
             >
               {merging ? (
