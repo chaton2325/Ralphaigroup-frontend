@@ -233,15 +233,14 @@ function CreateVideo({ onNavigate, isActive }) {
 
     try {
         const ffmpeg = ffmpegRef.current;
-        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+        const baseURL = '/ffmpeg';
 
         if (!ffmpeg.loaded) {
             ffmpeg.on('log', ({ message }) => { console.log(message); });
             await ffmpeg.load({
-                coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-                wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-                worker: false
-            });
+            coreURL: `${baseURL}/ffmpeg-core.js`,
+            wasmURL: `${baseURL}/ffmpeg-core.wasm`
+          });
         }
         
         ffmpeg.on('progress', onProgress);
