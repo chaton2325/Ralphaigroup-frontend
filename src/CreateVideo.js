@@ -42,6 +42,7 @@ function CreateVideo({ onNavigate, isActive }) {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
   const [packages, setPackages] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('chat_history');
@@ -495,6 +496,21 @@ function CreateVideo({ onNavigate, isActive }) {
     }
   };
 
+  const handleClearHistory = () => {
+    setShowClearHistoryModal(true);
+  };
+
+  const confirmClearHistory = () => {
+    setMessages([{
+      id: 'welcome',
+      type: 'bot',
+      content: "Bienvenue dans le Studio Créatif. 👋 \n\nJe suis prêt à donner vie à vos idées. Décrivez votre concept, envoyez une photo de référence si vous le souhaitez, et je génère votre vidéo 8k haute performance.",
+    }]);
+    localStorage.removeItem('chat_history');
+    setPendingData(null);
+    setShowClearHistoryModal(false);
+  };
+
   return (
     <div className="dashboard-wrapper chat-mode-wrapper">
       <style>{`
@@ -547,7 +563,17 @@ function CreateVideo({ onNavigate, isActive }) {
             </div>
           </div>
         </div>
-        <button className="btn-add-token-small" onClick={handleRechargeClick}><Zap size={14} fill="currentColor" /></button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button 
+            className="btn-add-token-small" 
+            onClick={handleClearHistory} 
+            style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}
+            title="Effacer l'historique"
+          >
+            <Trash2 size={16} />
+          </button>
+          <button className="btn-add-token-small" onClick={handleRechargeClick}><Zap size={14} fill="currentColor" /></button>
+        </div>
       </div>
 
       <div className="chat-messages" onScroll={handleScroll}>
@@ -817,6 +843,36 @@ function CreateVideo({ onNavigate, isActive }) {
                   <button className="btn-package-select" onClick={() => handleBuyPackage(pkg.id)} disabled={paymentLoading}>Choisir</button>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showClearHistoryModal && (
+        <div className="modal-overlay reveal" style={{ zIndex: 2000 }}>
+          <div className="modal-content glass reveal" style={{ maxWidth: '400px', textAlign: 'center' }}>
+            <div className="modal-header" style={{ justifyContent: 'center', marginBottom: '10px' }}>
+              <h2 className="modal-title">Effacer l'historique ?</h2>
+            </div>
+            <p style={{ marginBottom: '20px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+              Voulez-vous vraiment supprimer l'historique de chat ?<br/><br/>
+              <small style={{ opacity: 0.8 }}>Note : Ce chat est stocké localement et n'est visible sur aucun autre appareil.</small>
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                className="btn-apple-secondary w-full" 
+                onClick={() => setShowClearHistoryModal(false)}
+                style={{ justifyContent: 'center' }}
+              >
+                Annuler
+              </button>
+              <button 
+                className="btn-apple-primary w-full" 
+                onClick={confirmClearHistory}
+                style={{ justifyContent: 'center', background: '#ef4444', borderColor: '#ef4444' }}
+              >
+                Supprimer
+              </button>
             </div>
           </div>
         </div>
