@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import {
   History,
   Monitor,
@@ -32,7 +30,6 @@ function Projects({ onNavigate }) {
   const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [merging, setMerging] = useState(false);
   const [mergeProgress, setMergeProgress] = useState(0);
-  const ffmpegRef = useRef(new FFmpeg());
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -91,37 +88,26 @@ function Projects({ onNavigate }) {
     setMerging(true);
     setMergeProgress(0);
 
+    // Simulation de progression
+    const progressInterval = setInterval(() => {
+      setMergeProgress(prev => {
+        if (prev >= 90) return 90;
+        return prev + 5;
+      });
+    }, 500);
+
     try {
-        const ffmpeg = ffmpegRef.current;
-        const baseURL = '/ffmpeg';
-
-        if (!ffmpeg.loaded) {
-            await ffmpeg.load({
-            coreURL: `${baseURL}/ffmpeg-core.js`,
-            wasmURL: `${baseURL}/ffmpeg-core.wasm`,
-            worker: false,   // important pour Vercel
-            thread: false    // désactive multi-threading pour plus de compatibilité
-          });
-        }
-
-        ffmpeg.on('progress', ({ progress }) => {
-            setMergeProgress(Math.round(progress * 100));
+        const videoUrls = selectedVideos.map(v => v.video_url);
+        
+        const mergeResponse = await fetch('https://service.ralp-ai.site/merge-videos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videos: videoUrls })
         });
 
-        let fileListContent = '';
-        for (let i = 0; i < selectedVideos.length; i++) {
-            const video = selectedVideos[i];
-            const fileName = `input${i}.mp4`;
-            await ffmpeg.writeFile(fileName, await fetchFile(video.video_url));
-            fileListContent += `file '${fileName}'\n`;
-        }
-
-        await ffmpeg.writeFile('filelist.txt', fileListContent);
-        await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'filelist.txt', '-c', 'copy', 'output.mp4']);
-
-        const data = await ffmpeg.readFile('output.mp4');
-        const mergedBlob = new Blob([data.buffer], { type: 'video/mp4' });
-
+        if (!mergeResponse.ok) throw new Error('Erreur fusion service Python');
+        const mergedBlob = await mergeResponse.blob();
+        
         const formData = new FormData();
         formData.append('file', mergedBlob, 'merged_video.mp4');
         
@@ -134,12 +120,14 @@ function Projects({ onNavigate }) {
         setVideos(response.data.history || []);
         
         setShowMergeModal(false);
+        clearInterval(progressInterval);
         setIsSelectionMode(false);
         setSelectedVideos([]);
         alert("Fusion terminée ! La vidéo a été ajoutée à vos projets.");
 
     } catch (err) {
         console.error(err);
+        clearInterval(progressInterval);
         alert("Erreur lors de la fusion.");
     } finally {
         setMerging(false);

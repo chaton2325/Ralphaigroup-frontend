@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import {
   Bot,
   User,
@@ -53,7 +51,6 @@ function CreateVideo({ onNavigate, isActive }) {
     }];
   });
   const messagesEndRef = useRef(null);
-  const ffmpegRef = useRef(new FFmpeg());
   const [pendingData, setPendingData] = useState(() => {
     const saved = localStorage.getItem('chat_pending_data');
     return saved ? JSON.parse(saved) : null;
@@ -101,7 +98,7 @@ function CreateVideo({ onNavigate, isActive }) {
   }, [isActive]);
 
   // Liste des vidéos générées dans la session courante (pour la fusion)
-  const generatedVideos = messages.filter(m => m.videoUrl && !m.isError && !m.isMerged);
+  const generatedVideos = messages.filter(m => m.videoUrl && !m.videoUrl.startsWith('blob:') && !m.isError && !m.isMerged);
 
   const handleExtendVideo = async (videoUrl) => {
     if (uploadingImage || loading) return;
@@ -223,46 +220,36 @@ function CreateVideo({ onNavigate, isActive }) {
         isProcessing: true
     }]);
 
-    const onProgress = ({ progress }) => {
-        const currentProgress = Math.round(progress * 100);
-        setMergeProgress(currentProgress);
-        setMessages(prev => prev.map(msg => 
-            msg.id === mergeMsgId ? { ...msg, content: `Fusion en cours... ${currentProgress}%`, isProcessing: true } : msg
-        ));
-    };
+    // Simulation de progression car le serveur ne renvoie pas de stream de progression
+    const progressInterval = setInterval(() => {
+      setMergeProgress(prev => {
+        if (prev >= 90) return 90;
+        return prev + 5;
+      });
+    }, 500);
 
     try {
-        const ffmpeg = ffmpegRef.current;
-        const baseURL = '/ffmpeg';
+        const videoUrls = mergeList.map(v => v.videoUrl);
 
-        if (!ffmpeg.loaded) {
-            ffmpeg.on('log', ({ message }) => { console.log(message); });
-            await ffmpeg.load({
-            coreURL: `${baseURL}/ffmpeg-core.js`,
-            wasmURL: `${baseURL}/ffmpeg-core.wasm`,
-            worker: false,   // important pour Vercel
-            thread: false    // désactive multi-threading pour plus de compatibilité
-          });
-        }
-        
-        ffmpeg.on('progress', onProgress);
+        // Appel au service Python pour la fusion
+        const mergeResponse = await fetch('https://service.ralp-ai.site/merge-videos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videos: videoUrls })
+        });
 
-        let fileListContent = '';
-        for (let i = 0; i < mergeList.length; i++) {
-            const video = mergeList[i];
-            const fileName = `input${i}.mp4`;
-            await ffmpeg.writeFile(fileName, await fetchFile(video.videoUrl));
-            fileListContent += `file '${fileName}'\n`;
+        if (!mergeResponse.ok) {
+            throw new Error('Erreur lors de la fusion sur le serveur Python');
         }
 
-        await ffmpeg.writeFile('filelist.txt', fileListContent);
-
-        await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'filelist.txt', '-c', 'copy', 'output.mp4']);
+        const mergedBlob = await mergeResponse.blob();
         
-        ffmpeg.off('progress', onProgress);
+        clearInterval(progressInterval);
+        setMergeProgress(100);
+        setMessages(prev => prev.map(msg => 
+            msg.id === mergeMsgId ? { ...msg, content: `Finalisation...`, isProcessing: true } : msg
+        ));
 
-        const data = await ffmpeg.readFile('output.mp4');
-        const mergedBlob = new Blob([data.buffer], { type: 'video/mp4' });
         let url = URL.createObjectURL(mergedBlob);
 
         let savedToHistory = false;
@@ -293,7 +280,7 @@ function CreateVideo({ onNavigate, isActive }) {
         ));
 
     } catch (err) {
-        ffmpegRef.current.off('progress', onProgress);
+        clearInterval(progressInterval);
         console.error("Erreur de fusion vidéo:", err);
         setError("Une erreur est survenue lors de la fusion des vidéos. Cette opération peut être gourmande en ressources.");
         setMessages(prev => prev.map(msg => msg.id === mergeMsgId ? { ...msg, isError: true, content: "La fusion a échoué.", isProcessing: false } : msg));
