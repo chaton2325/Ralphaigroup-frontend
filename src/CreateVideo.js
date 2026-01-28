@@ -239,7 +239,9 @@ function CreateVideo({ onNavigate, isActive }) {
             ffmpeg.on('log', ({ message }) => { console.log(message); });
             await ffmpeg.load({
             coreURL: `${baseURL}/ffmpeg-core.js`,
-            wasmURL: `${baseURL}/ffmpeg-core.wasm`
+            wasmURL: `${baseURL}/ffmpeg-core.wasm`,
+            worker: false,   // important pour Vercel
+            thread: false    // désactive multi-threading pour plus de compatibilité
           });
         }
         
