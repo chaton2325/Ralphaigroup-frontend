@@ -14,7 +14,9 @@ import {
   CheckCircle2,
   Trophy,
   Loader2,
-  Sparkles
+  Sparkles,
+  Film,
+  Layers
 } from 'lucide-react';
 import api from './services/api';
 
@@ -87,6 +89,80 @@ function CreateVideo({ onNavigate, isActive }) {
       setTimeout(scrollToBottom, 100);
     }
   }, [isActive]);
+
+  // Liste des vidéos générées dans la session courante (pour la fusion)
+  const generatedVideos = messages.filter(m => m.videoUrl && !m.isError);
+
+  const handleExtendVideo = async (videoUrl) => {
+    if (uploadingImage || loading) return;
+    
+    setUploadingImage(true);
+    try {
+      // Création d'un élément vidéo pour capturer la frame
+      const video = document.createElement('video');
+      video.crossOrigin = 'anonymous'; // Nécessaire pour éviter le tainting du canvas
+      video.src = videoUrl;
+      video.muted = true;
+      
+      await new Promise((resolve, reject) => {
+        video.onloadedmetadata = () => {
+          // Se positionner à la fin (moins 0.1s pour être sûr d'avoir une image)
+          video.currentTime = Math.max(0, video.duration - 0.1);
+        };
+        video.onseeked = () => resolve();
+        video.onerror = (e) => reject(new Error('Erreur chargement vidéo'));
+        setTimeout(() => reject(new Error('Timeout extraction frame')), 10000);
+      });
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+            setUploadingImage(false);
+            return;
+        }
+        const file = new File([blob], "frame_suite.jpg", { type: "image/jpeg" });
+        setImageFile(file);
+        
+        const formDataImage = new FormData();
+        formDataImage.append('file', file);
+
+        try {
+            const uploadRes = await fetch('https://service.ralp-ai.site/upload', {
+              method: 'POST',
+              body: formDataImage
+            });
+
+            if (!uploadRes.ok) throw new Error("Upload failed");
+
+            const uploadData = await uploadRes.json();
+            setPreviewUrl(`${uploadData.url}?t=${Date.now()}`);
+            setCloudinaryUrl(uploadData.url);
+            setPrompt("Suite de la vidéo : ");
+            document.querySelector('.chat-textarea')?.focus();
+        } catch (err) {
+            setError("Erreur upload frame.");
+        } finally {
+            setUploadingImage(false);
+        }
+      }, 'image/jpeg');
+      
+    } catch (err) {
+      console.error(err);
+      setError("Impossible d'extraire la frame (CORS?).");
+      setUploadingImage(false);
+    }
+  };
+
+  const handleMergeVideos = () => {
+    // Placeholder pour la future requête API
+    alert(`Fusion de ${generatedVideos.length} vidéos demandée. (API en attente)`);
+    // TODO: Implémenter l'appel API ici quand disponible
+  };
 
   const handleRemoveImage = () => {
     setImageFile(null);
@@ -339,10 +415,27 @@ function CreateVideo({ onNavigate, isActive }) {
               {msg.videoUrl && (
                 <div className="message-video-attachment">
                   <video controls src={msg.videoUrl} autoPlay muted loop playsInline />
-                  <a href={msg.videoUrl} download className="download-link-apple">
-                    <Download size={14} style={{ marginRight: '6px' }} />
-                    Enregistrer
-                  </a>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '8px', flexWrap: 'wrap' }}>
+                    <a href={msg.videoUrl} download className="download-link-apple">
+                      <Download size={14} style={{ marginRight: '6px' }} />
+                      Enregistrer
+                    </a>
+                    <button 
+                      onClick={() => handleExtendVideo(msg.videoUrl)}
+                      className="download-link-apple"
+                      style={{ 
+                        background: 'rgba(255, 255, 255, 0.1)', 
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        cursor: 'pointer',
+                        color: 'inherit',
+                        fontFamily: 'inherit',
+                        fontSize: 'inherit'
+                      }}
+                    >
+                      <Film size={14} style={{ marginRight: '6px' }} />
+                      Générer une suite
+                    </button>
+                  </div>
                 </div>
               )}
               {msg.settings && (
@@ -406,6 +499,28 @@ function CreateVideo({ onNavigate, isActive }) {
             {optimizing ? 'Optimisation...' : 'Améliorer le prompt'}
           </button>
           <div className="chat-option-badge">8s High Fidelity</div>
+          {generatedVideos.length > 1 && (
+            <button 
+              type="button"
+              onClick={handleMergeVideos}
+              style={{
+                background: 'var(--text-main)',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                color: 'var(--bg-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                marginLeft: 'auto'
+              }}
+            >
+              <Layers size={14} />
+              Fusionner
+            </button>
+          )}
         </div>
 
         <form onSubmit={handleChatSubmit} className="chat-input-row lower-input">
