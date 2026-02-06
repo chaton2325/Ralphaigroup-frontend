@@ -9,7 +9,8 @@ import {
   X,
   CheckCircle2,
   Trophy,
-  LogOut
+  LogOut,
+  ShoppingBag
 } from 'lucide-react';
 import api from './services/api';
 
@@ -124,6 +125,15 @@ function Dashboard({ onNavigate }) {
             <p className="stat-desc">Générer une vidéo</p>
           </div>
           <div className="action-arrow"><ArrowRight size={20} /></div>
+        </div>
+
+        <div className="stat-card reveal" onClick={() => onNavigate('ad-generator')} style={{ background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', cursor: 'pointer' }}>
+          <div className="stat-icon" style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}><ShoppingBag size={24} /></div>
+          <div className="stat-content">
+            <h3 style={{ color: 'white' }}>Générateur Pub</h3>
+            <p className="stat-desc" style={{ color: 'rgba(255,255,255,0.9)' }}>Vidéo produit pro</p>
+          </div>
+          <div className="action-arrow" style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}><ArrowRight size={20} /></div>
         </div>
       </div>
 

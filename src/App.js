@@ -20,7 +20,8 @@ import {
   ArrowRight,
   User,
   Settings,
-  X
+  X,
+  ShoppingBag
 } from 'lucide-react';
 import './App.css';
 import Login from './Login';
@@ -30,6 +31,7 @@ import Dashboard from './Dashboard';
 import Projects from './Projects';
 import Sidebar from './Sidebar';
 import CreateVideo from './CreateVideo';
+import AdGenerator from './AdGenerator';
 
 function App() {
   const [currentPage, setCurrentPage] = useState(() => {
@@ -37,7 +39,7 @@ function App() {
   });
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  const isAuthPage = ['dashboard', 'projects', 'create'].includes(currentPage);
+  const isAuthPage = ['dashboard', 'projects', 'create', 'ad-generator'].includes(currentPage);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -60,6 +62,8 @@ function App() {
         return <Projects onNavigate={setCurrentPage} />;
       case 'create':
         return null;
+      case 'ad-generator':
+        return <AdGenerator onNavigate={setCurrentPage} />;
       default:
         return (
           <div className="landing-page">
@@ -284,7 +288,7 @@ function App() {
             <CreateVideo onNavigate={setCurrentPage} isActive={currentPage === 'create'} />
           </div>
           {currentPage !== 'create' && renderContent()}
-          {currentPage !== 'create' && <Footer />}
+          {currentPage !== 'create' && currentPage !== 'ad-generator' && <Footer />}
         </div>
 
         {/* Navigation Mobile */}
@@ -299,6 +303,11 @@ function App() {
               <PlusSquare size={24} />
             </div>
             <span className="nav-label">Créer</span>
+          </button>
+
+          <button className={`mobile-nav-item ${currentPage === 'ad-generator' ? 'active' : ''}`} onClick={() => setCurrentPage('ad-generator')}>
+            <ShoppingBag size={20} />
+            <span className="nav-label">Pub</span>
           </button>
 
           <button className={`mobile-nav-item ${currentPage === 'projects' ? 'active' : ''}`} onClick={() => setCurrentPage('projects')}>
@@ -349,6 +358,10 @@ function App() {
                 <button className="mobile-menu-item" onClick={() => { setCurrentPage('create'); setShowMobileMenu(false); }}>
                   <PlusSquare size={20} />
                   <span>Créer une vidéo</span>
+                </button>
+                <button className="mobile-menu-item" onClick={() => { setCurrentPage('ad-generator'); setShowMobileMenu(false); }}>
+                  <ShoppingBag size={20} />
+                  <span>Générateur Pub</span>
                 </button>
               </div>
 

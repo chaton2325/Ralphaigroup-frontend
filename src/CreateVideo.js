@@ -132,7 +132,8 @@ function CreateVideo({ onNavigate, isActive }) {
             setUploadingImage(false);
             return;
         }
-        const file = new File([blob], "frame_suite.jpg", { type: "image/jpeg" });
+        const uniqueName = `frame_suite_${Date.now()}_${Math.floor(Math.random() * 1000)}.jpg`;
+        const file = new File([blob], uniqueName, { type: "image/jpeg" });
         setImageFile(file);
         
         const formDataImage = new FormData();

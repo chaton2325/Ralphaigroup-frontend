@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, PlusCircle, FolderHeart, LogOut } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, FolderHeart, LogOut, ShoppingBag } from 'lucide-react';
 
 function Sidebar({ currentPage, onNavigate }) {
   const handleLogout = () => {
@@ -27,6 +27,13 @@ function Sidebar({ currentPage, onNavigate }) {
         >
           <PlusCircle size={18} />
           <span>Nouvelle Création</span>
+        </button>
+        <button
+          className={`nav-item ${currentPage === 'ad-generator' ? 'active' : ''}`}
+          onClick={() => onNavigate('ad-generator')}
+        >
+          <ShoppingBag size={18} />
+          <span>Générateur Pub</span>
         </button>
         <button
           className={`nav-item ${currentPage === 'projects' ? 'active' : ''}`}
