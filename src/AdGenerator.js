@@ -12,21 +12,50 @@ import {
   Trash2,
   Zap,
   Trophy,
-  X
+  X,
+  Monitor,
+  Smartphone
 } from 'lucide-react';
 import api from './services/api';
+
+const Typewriter = ({ text, onComplete }) => {
+  const [display, setDisplay] = useState('');
+  
+  useEffect(() => {
+    if (!text) {
+      if (onComplete) onComplete();
+      return;
+    }
+    let i = 0;
+    const timer = setInterval(() => {
+      setDisplay(text.substring(0, i + 1));
+      i++;
+      if (i >= text.length) {
+        clearInterval(timer);
+        if (onComplete) onComplete();
+      }
+    }, 5);
+    return () => clearInterval(timer);
+  }, [text]);
+
+  return <>{display}</>;
+};
 
 function AdGenerator({ onNavigate }) {
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('ad_chat_history');
-    return saved ? JSON.parse(saved) : [{
+    if (saved) {
+      return JSON.parse(saved).map(m => ({ ...m, animate: false }));
+    }
+    return [{
       id: 'welcome',
       type: 'bot',
-      content: "Bonjour ! Je suis votre expert en publicité vidéo. 👋\n\nPour commencer, quel est le nom du produit que vous souhaitez mettre en avant ?"
+      content: "Bonjour ! Je suis votre expert en publicité vidéo. (08 secondes pour le moment) 👋\n\nPour commencer, quel est le nom du produit que vous souhaitez mettre en avant ?",
+      animate: true
     }];
   });
   const [input, setInput] = useState('');
-  const [step, setStep] = useState(() => parseInt(localStorage.getItem('ad_step') || '0')); // 0: Name, 1: Desire, 2: Points, 3: Image, 4: Price, 5: Language
+  const [step, setStep] = useState(() => parseInt(localStorage.getItem('ad_step') || '0')); // 0: Name, 1: Desire, 2: Points, 3: Image, 4: Price, 5: Language, 6: Format
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem('ad_form_data');
     return saved ? JSON.parse(saved) : {
@@ -37,7 +66,8 @@ function AdGenerator({ onNavigate }) {
       imageBase64: null,
       imageName: null,
       price: '',
-      language: ''
+      language: '',
+      aspectRatio: 'pc'
     };
   });
   const [loading, setLoading] = useState(false);
@@ -68,6 +98,10 @@ function AdGenerator({ onNavigate }) {
     localStorage.setItem('ad_form_data', JSON.stringify(dataToSave));
   }, [step, formData]);
 
+  const handleAnimationComplete = (id) => {
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, animate: false } : m));
+  };
+
   const handleClearHistory = () => {
     localStorage.removeItem('ad_chat_history');
     localStorage.removeItem('ad_step');
@@ -75,10 +109,11 @@ function AdGenerator({ onNavigate }) {
     setMessages([{
       id: 'welcome',
       type: 'bot',
-      content: "Bonjour ! Je suis votre expert en publicité vidéo. 👋\n\nPour commencer, quel est le nom du produit que vous souhaitez mettre en avant ?"
+      content: "Bonjour ! Je suis votre expert en publicité vidéo. 👋\n\nPour commencer, quel est le nom du produit que vous souhaitez mettre en avant ?",
+      animate: true
     }]);
     setStep(0);
-    setFormData({ productName: '', desire: '', keyPoints: '', image: null, imageBase64: null, imageName: null, price: '', language: '' });
+    setFormData({ productName: '', desire: '', keyPoints: '', image: null, imageBase64: null, imageName: null, price: '', language: '', aspectRatio: 'pc' });
     setSuggestions([]);
   };
 
@@ -105,13 +140,14 @@ function AdGenerator({ onNavigate }) {
 
         if (match) {
           setMessages(prev => {
-            const clean = prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: "Génération terminée en arrière-plan." } : m);
+            const clean = prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: "Génération terminée en arrière-plan.", animate: true } : m);
             if (!clean.some(m => m.videoUrl === match.video_url)) {
                 clean.push({
                     id: Date.now(),
                     type: 'bot',
                     content: "Voici votre vidéo (récupérée) :",
-                    videoUrl: match.video_url
+                    videoUrl: match.video_url,
+                    animate: true
                 });
             }
             return clean;
@@ -182,7 +218,7 @@ function AdGenerator({ onNavigate }) {
         botResponse = "Parfait. Veuillez maintenant télécharger une image de votre produit en cliquant sur l'icône image ci-dessous.";
         break;
       case 3: // Image (si texte entré au lieu d'image)
-        setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "J'ai besoin d'une image pour continuer. Utilisez l'icône 🖼️ à gauche du champ de texte." }]);
+        setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "J'ai besoin d'une image pour continuer. Utilisez l'icône 🖼️ à gauche du champ de texte.", animate: true }]);
         return;
       case 4: // Prix -> Langue
         nextFormData.price = userText;
@@ -195,7 +231,7 @@ function AdGenerator({ onNavigate }) {
     setFormData(nextFormData);
     setStep(nextStep);
     setTimeout(() => {
-      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: botResponse }]);
+      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: botResponse, animate: true }]);
     }, 500);
   };
 
@@ -204,8 +240,20 @@ function AdGenerator({ onNavigate }) {
     const nextFormData = { ...formData, language: lang };
     setFormData(nextFormData);
     setStep(6);
-    setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "Analyse en cours... Je génère des concepts publicitaires optimisés pour votre produit.", isProcessing: true }]);
+    setTimeout(() => {
+      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "Quel format souhaitez-vous ? (Portrait pour TikTok/Reels, Paysage pour YouTube/Web)", animate: true }]);
+    }, 500);
+  };
+
+  const handleFormatSelect = async (format) => {
+    const formatText = format === 'mobile' ? "Format Portrait (9:16)" : "Format Paysage (16:9)";
+    setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: formatText }]);
     
+    const nextFormData = { ...formData, aspectRatio: format };
+    setFormData(nextFormData);
+    setStep(7);
+    
+    setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "Analyse en cours... Je génère des concepts publicitaires optimisés pour votre produit.", isProcessing: true, animate: true }]);
     await fetchAdSuggestions(nextFormData);
   };
 
@@ -217,7 +265,7 @@ function AdGenerator({ onNavigate }) {
     setFormData(nextFormData);
     setStep(5);
     setTimeout(() => {
-      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "C'est noté. Dans quelle langue souhaitez-vous la publicité ?" }]);
+      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "C'est noté. Dans quelle langue souhaitez-vous la publicité ?", animate: true }]);
     }, 500);
   };
 
@@ -243,7 +291,7 @@ function AdGenerator({ onNavigate }) {
       setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: "Image envoyée", image: base64 }]);
       setStep(4);
       setTimeout(() => {
-        setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "Image reçue ! Quel est le prix du produit (ou une gamme de prix) ?" }]);
+        setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "Image reçue ! Quel est le prix du produit (ou une gamme de prix) ?", animate: true }]);
       }, 500);
     };
     reader.readAsDataURL(newFile);
@@ -281,11 +329,11 @@ function AdGenerator({ onNavigate }) {
       
       setSuggestions(result.ad_suggestions || []);
       
-      setMessages(prev => prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: "Analyse terminée ! Voici 5 concepts publicitaires. Cliquez sur celui que vous préférez pour générer la vidéo." } : m));
+      setMessages(prev => prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: "Analyse terminée ! Voici 5 concepts publicitaires. Cliquez sur celui que vous préférez pour générer la vidéo.", animate: true } : m));
 
     } catch (err) {
       console.error(err);
-      setMessages(prev => prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: "Une erreur est survenue lors de l'analyse.", isError: true } : m));
+      setMessages(prev => prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: "Une erreur est survenue lors de l'analyse.", isError: true, animate: true } : m));
     } finally {
       setLoading(false);
     }
@@ -298,7 +346,8 @@ function AdGenerator({ onNavigate }) {
         id: Date.now(),
         type: 'bot',
         content: "⚠️ Jetons insuffisants (10 requis).",
-        isError: true
+        isError: true,
+        animate: true
       }]);
       handleRechargeClick();
       return;
@@ -311,7 +360,8 @@ function AdGenerator({ onNavigate }) {
       id: Date.now(),
       type: 'bot',
       content: `Vous avez choisi le concept : "${suggestion}"\n\nConfirmez-vous la génération ? (Coût : 10 jetons)`,
-      isConfirmation: true
+      isConfirmation: true,
+      animate: true
     }]);
   };
 
@@ -321,7 +371,7 @@ function AdGenerator({ onNavigate }) {
     setPendingSuggestion(null);
     
     setMessages(prev => prev.map(msg => 
-      msg.isConfirmation ? { ...msg, isConfirmation: false, content: `Concept validé. Lancement de la production...` } : msg
+      msg.isConfirmation ? { ...msg, isConfirmation: false, content: `Concept validé. Lancement de la production...`, animate: true } : msg
     ));
 
     setLoading(true);
@@ -332,7 +382,8 @@ function AdGenerator({ onNavigate }) {
       id: msgId,
       type: 'bot',
       content: `Excellent choix ! Téléchargement de l'image et lancement de la production...`,
-      isProcessing: true
+      isProcessing: true,
+      animate: true
     }]);
 
     try {
@@ -344,14 +395,14 @@ function AdGenerator({ onNavigate }) {
       const uploadData = await uploadRes.json();
       const imageUrl = uploadData.url;
 
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, content: `Image prête. Génération de la vidéo en cours...` } : m));
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, content: `Image prête. Génération de la vidéo en cours...`, animate: true } : m));
 
       // 2. Generate Video
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const genRes = await api.post('/video/generate', {
         prompt: suggestion,
         duration: '8',
-        aspectRatio: 'pc',
+        aspectRatio: formData.aspectRatio || 'pc',
         language: formData.language.substring(0, 2).toLowerCase() || 'fr',
         imageUrl: imageUrl
       });
@@ -362,17 +413,27 @@ function AdGenerator({ onNavigate }) {
       }
 
       localStorage.removeItem('ad_pending_generation');
-      setMessages(prev => prev.map(m => m.id === msgId ? { 
-        ...m, 
-        isProcessing: false, 
-        content: "Vidéo générée avec succès !", 
-        videoUrl: genRes.data.url 
-      } : m));
+      setMessages(prev => {
+        const updated = prev.map(m => m.id === msgId ? { 
+          ...m, 
+          isProcessing: false, 
+          content: "Vidéo générée avec succès !", 
+          videoUrl: genRes.data.url,
+          animate: true
+        } : m);
+        return [...updated, {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: "Souhaitez-vous générer une autre publicité ?",
+          isEndOption: true,
+          animate: true
+        }];
+      });
 
     } catch (err) {
       console.error(err);
       localStorage.removeItem('ad_pending_generation');
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isProcessing: false, content: "Erreur lors de la génération de la vidéo.", isError: true } : m));
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isProcessing: false, content: "Erreur lors de la génération de la vidéo.", isError: true, animate: true } : m));
     } finally {
       setLoading(false);
     }
@@ -405,7 +466,11 @@ function AdGenerator({ onNavigate }) {
             <div className={`message-content ${msg.isError ? 'error-msg' : ''} glass`}>
               {msg.image && <div className="message-image-attachment"><img src={msg.image} alt="Product" /></div>}
               {msg.isProcessing && <Loader2 size={18} className="animate-spin" style={{ marginRight: '8px', display: 'inline-block' }} />}
-              {msg.content}
+              {msg.type === 'bot' && msg.animate ? (
+                <Typewriter text={msg.content} onComplete={() => handleAnimationComplete(msg.id)} />
+              ) : (
+                msg.content
+              )}
               {msg.videoUrl && (
                 <div className="message-video-attachment">
                   <video controls src={msg.videoUrl} autoPlay muted loop playsInline />
@@ -416,6 +481,11 @@ function AdGenerator({ onNavigate }) {
                 <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
                   <button onClick={handleConfirmGeneration} className="btn-apple-primary sm" style={{ background: '#ec4899', color: 'white', border: 'none' }}><CheckCircle2 size={16} style={{ marginRight: '6px' }} /> Confirmer (10 jetons)</button>
                   <button onClick={handleCancelGeneration} className="btn-apple-secondary sm"><X size={16} style={{ marginRight: '6px' }} /> Annuler</button>
+                </div>
+              )}
+              {msg.isEndOption && (
+                <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
+                  <button onClick={handleClearHistory} className="btn-apple-primary sm" style={{ background: '#ec4899', color: 'white', border: 'none' }}><Sparkles size={16} style={{ marginRight: '6px' }} /> Nouvelle pub</button>
                 </div>
               )}
             </div>
@@ -444,6 +514,17 @@ function AdGenerator({ onNavigate }) {
           <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', padding: '10px' }}>
             <button onClick={() => handleLanguageSelect('Français')} className="btn-apple-secondary" style={{ minWidth: '120px' }}>Français 🇫🇷</button>
             <button onClick={() => handleLanguageSelect('English')} className="btn-apple-secondary" style={{ minWidth: '120px' }}>English 🇬🇧</button>
+          </div>
+        ) : step === 6 ? (
+          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', padding: '10px' }}>
+            <button onClick={() => handleFormatSelect('mobile')} className="btn-apple-secondary" style={{ minWidth: '120px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '12px' }}>
+                <Smartphone size={24} />
+                <span>Portrait</span>
+            </button>
+            <button onClick={() => handleFormatSelect('pc')} className="btn-apple-secondary" style={{ minWidth: '120px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '12px' }}>
+                <Monitor size={24} />
+                <span>Paysage</span>
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSend} className="chat-input-row lower-input">

@@ -27,6 +27,10 @@ function Dashboard({ onNavigate }) {
     localStorage.removeItem('user');
     localStorage.removeItem('chat_history');
     localStorage.removeItem('chat_pending_data');
+    localStorage.removeItem('ad_chat_history');
+    localStorage.removeItem('ad_step');
+    localStorage.removeItem('ad_form_data');
+    localStorage.removeItem('ad_pending_generation');
     onNavigate('home');
   };
 

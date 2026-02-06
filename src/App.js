@@ -44,6 +44,12 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('chat_history');
+    localStorage.removeItem('chat_pending_data');
+    localStorage.removeItem('ad_chat_history');
+    localStorage.removeItem('ad_step');
+    localStorage.removeItem('ad_form_data');
+    localStorage.removeItem('ad_pending_generation');
     setShowMobileMenu(false);
     setCurrentPage('home');
   };

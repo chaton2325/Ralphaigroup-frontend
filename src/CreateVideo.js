@@ -23,6 +23,29 @@ import {
 } from 'lucide-react';
 import api from './services/api';
 
+const Typewriter = ({ text, onComplete }) => {
+  const [display, setDisplay] = useState('');
+  
+  useEffect(() => {
+    if (!text) {
+      if (onComplete) onComplete();
+      return;
+    }
+    let i = 0;
+    const timer = setInterval(() => {
+      setDisplay(text.substring(0, i + 1));
+      i++;
+      if (i >= text.length) {
+        clearInterval(timer);
+        if (onComplete) onComplete();
+      }
+    }, 5);
+    return () => clearInterval(timer);
+  }, [text]);
+
+  return <>{display}</>;
+};
+
 function CreateVideo({ onNavigate, isActive }) {
   const [prompt, setPrompt] = useState('');
   const [imageFile, setImageFile] = useState(null);
@@ -44,10 +67,14 @@ function CreateVideo({ onNavigate, isActive }) {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('chat_history');
-    return saved ? JSON.parse(saved) : [{
+    if (saved) {
+      return JSON.parse(saved).map(m => ({ ...m, animate: false }));
+    }
+    return [{
       id: 'welcome',
       type: 'bot',
       content: "Bienvenue dans le Studio Créatif. 👋 \n\nJe suis prêt à donner vie à vos idées. Décrivez votre concept, envoyez une photo de référence si vous le souhaitez, et je génère votre vidéo 8k haute performance.",
+      animate: true
     }];
   });
   const messagesEndRef = useRef(null);
@@ -67,6 +94,10 @@ function CreateVideo({ onNavigate, isActive }) {
       localStorage.removeItem('chat_pending_data');
     }
   }, [pendingData]);
+
+  const handleAnimationComplete = (id) => {
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, animate: false } : m));
+  };
 
   // État pour suivre si l'utilisateur a fait défiler manuellement
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
@@ -175,14 +206,15 @@ function CreateVideo({ onNavigate, isActive }) {
       id: Date.now(),
       type: 'bot',
       content: `🎬 **Fusion de Séquences**\n\nOrganisez vos scènes avant la fusion finale.`,
-      isMergeConfirmation: true
+      isMergeConfirmation: true,
+      animate: true
     }]);
     setTimeout(scrollToBottom, 100);
   };
 
   const cancelMerge = () => {
     setMessages(prev => prev.map(msg => 
-      msg.isMergeConfirmation ? { ...msg, isMergeConfirmation: false, content: "Fusion annulée." } : msg
+      msg.isMergeConfirmation ? { ...msg, isMergeConfirmation: false, content: "Fusion annulée.", animate: true } : msg
     ));
   };
 
@@ -204,7 +236,7 @@ function CreateVideo({ onNavigate, isActive }) {
 
   const executeMerge = async () => {
     setMessages(prev => prev.map(msg => 
-      msg.isMergeConfirmation ? { ...msg, isMergeConfirmation: false, content: "Fusion confirmée. Traitement en cours..." } : msg
+      msg.isMergeConfirmation ? { ...msg, isMergeConfirmation: false, content: "Fusion confirmée. Traitement en cours...", animate: true } : msg
     ));
 
     if (merging || mergeList.length < 2) return;
@@ -218,7 +250,8 @@ function CreateVideo({ onNavigate, isActive }) {
         id: mergeMsgId,
         type: 'bot',
         content: `Préparation de la fusion de ${mergeList.length} vidéos... (cela peut prendre du temps)`,
-        isProcessing: true
+        isProcessing: true,
+        animate: true
     }]);
 
     // Simulation de progression car le serveur ne renvoie pas de stream de progression
@@ -248,7 +281,7 @@ function CreateVideo({ onNavigate, isActive }) {
         clearInterval(progressInterval);
         setMergeProgress(100);
         setMessages(prev => prev.map(msg => 
-            msg.id === mergeMsgId ? { ...msg, content: `Finalisation...`, isProcessing: true } : msg
+            msg.id === mergeMsgId ? { ...msg, content: `Finalisation...`, isProcessing: true, animate: true } : msg
         ));
 
         let url = URL.createObjectURL(mergedBlob);
@@ -276,7 +309,8 @@ function CreateVideo({ onNavigate, isActive }) {
                 content: `Fusion terminée ! Voici le résultat des ${mergeList.length} vidéos.${savedToHistory ? ' (Sauvegardé dans vos projets)' : ''}`,
                 videoUrl: url,
                 isMerged: true, // Flag pour ne pas afficher "Générer une suite"
-                isProcessing: false
+                isProcessing: false,
+                animate: true
             } : msg
         ));
 
@@ -284,7 +318,7 @@ function CreateVideo({ onNavigate, isActive }) {
         clearInterval(progressInterval);
         console.error("Erreur de fusion vidéo:", err);
         setError("Une erreur est survenue lors de la fusion des vidéos. Cette opération peut être gourmande en ressources.");
-        setMessages(prev => prev.map(msg => msg.id === mergeMsgId ? { ...msg, isError: true, content: "La fusion a échoué.", isProcessing: false } : msg));
+        setMessages(prev => prev.map(msg => msg.id === mergeMsgId ? { ...msg, isError: true, content: "La fusion a échoué.", isProcessing: false, animate: true } : msg));
     } finally {
         setMerging(false);
         setMergeProgress(0);
@@ -347,6 +381,7 @@ function CreateVideo({ onNavigate, isActive }) {
           id: Date.now(),
           type: 'bot',
           content: `⚡ **Optimisation du prompt**\n\n📝 **Original :** ${originalPrompt}\n\n✨ **Amélioré :** ${data.veo3_suggestion}\n\n(Le champ de saisie a été mis à jour)`
+          , animate: true
         }]);
       }
     } catch (err) {
@@ -365,7 +400,8 @@ function CreateVideo({ onNavigate, isActive }) {
         id: Date.now(),
         type: 'bot',
         content: "⚠️ Jetons insuffisants (10 requis pour la génération).",
-        isError: true
+        isError: true,
+        animate: true
       }]);
       handleRechargeClick();
       return;
@@ -392,7 +428,8 @@ function CreateVideo({ onNavigate, isActive }) {
       type: 'bot',
       content: `Voulez-vous vraiment générer la vidéo pour ce prompt : "${prompt}" ?\n\nCoût de la génération : 10 jetons.`,
       image: cloudinaryUrl,
-      isConfirmation: true
+      isConfirmation: true,
+      animate: true
     }]);
 
     setPrompt('');
@@ -405,7 +442,7 @@ function CreateVideo({ onNavigate, isActive }) {
     if (!pendingData) return;
 
     setMessages(prev => prev.map(msg => 
-      msg.isConfirmation ? { ...msg, isConfirmation: false, content: "Confirmation reçue. Génération en cours..." } : msg
+      msg.isConfirmation ? { ...msg, isConfirmation: false, content: "Confirmation reçue. Génération en cours...", animate: true } : msg
     ));
 
     setLoading(true);
@@ -434,7 +471,8 @@ function CreateVideo({ onNavigate, isActive }) {
         id: Date.now() + 1,
         type: 'bot',
         videoUrl: response.data.url,
-        content: "Opération terminée avec succès. Voici votre création."
+        content: "Opération terminée avec succès. Voici votre création.",
+        animate: true
       }]);
 
       if (response.data.tokens_remaining !== undefined) {
@@ -448,7 +486,8 @@ function CreateVideo({ onNavigate, isActive }) {
         id: Date.now() + 1,
         type: 'bot',
         content: "Une erreur critique est survenue lors de la génération.",
-        isError: true
+        isError: true,
+        animate: true
       }]);
     } finally {
       setLoading(false);
@@ -458,7 +497,7 @@ function CreateVideo({ onNavigate, isActive }) {
 
   const handleCancel = () => {
     setMessages(prev => prev.map(msg => 
-      msg.isConfirmation ? { ...msg, isConfirmation: false, content: "Génération annulée." } : msg
+      msg.isConfirmation ? { ...msg, isConfirmation: false, content: "Génération annulée.", animate: true } : msg
     ));
     setPendingData(null);
   };
@@ -495,6 +534,7 @@ function CreateVideo({ onNavigate, isActive }) {
       id: 'welcome',
       type: 'bot',
       content: "Bienvenue dans le Studio Créatif. 👋 \n\nJe suis prêt à donner vie à vos idées. Décrivez votre concept, envoyez une photo de référence si vous le souhaitez, et je génère votre vidéo 8k haute performance.",
+      animate: true
     }]);
     localStorage.removeItem('chat_history');
     setPendingData(null);
@@ -583,7 +623,11 @@ function CreateVideo({ onNavigate, isActive }) {
                   {msg.isProcessing && (
                     <Loader2 size={18} className="animate-spin" style={{ marginTop: '2px', flexShrink: 0 }} />
                   )}
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>
+                  <div style={{ whiteSpace: 'pre-wrap' }}>
+                    {msg.type === 'bot' && msg.animate ? (
+                      <Typewriter text={msg.content} onComplete={() => handleAnimationComplete(msg.id)} />
+                    ) : msg.content}
+                  </div>
                 </div>
               )}
               {msg.isConfirmation && (

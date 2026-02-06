@@ -15,7 +15,9 @@ import {
   ArrowUp,
   ArrowDown,
   Trash2,
-  CheckCircle2
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import api from './services/api';
 
@@ -30,6 +32,7 @@ function Projects({ onNavigate }) {
   const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [merging, setMerging] = useState(false);
   const [mergeProgress, setMergeProgress] = useState(0);
+  const [activePrompt, setActivePrompt] = useState(null);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -49,6 +52,11 @@ function Projects({ onNavigate }) {
     const { videoWidth, videoHeight } = e.target;
     const orientation = videoWidth < videoHeight ? 'portrait' : 'landscape';
     setOrientations(prev => ({ ...prev, [id]: orientation }));
+  };
+
+  const handleViewPrompt = (prompt, e) => {
+    e.stopPropagation();
+    setActivePrompt(prompt);
   };
 
   const toggleSelectionMode = () => {
@@ -280,7 +288,25 @@ function Projects({ onNavigate }) {
                 </div>
                 <div className="project-info">
                   <p className="project-date">{new Date(video.created_at).toLocaleDateString()}</p>
-                  <p className="project-prompt" title={video.prompt}>{video.prompt}</p>
+                  <div style={{ marginBottom: '10px' }}>
+                    <p 
+                      className="project-prompt" 
+                      style={{ 
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        marginBottom: '4px'
+                      }}
+                    >
+                      {video.prompt}
+                    </p>
+                    <button 
+                      onClick={(e) => handleViewPrompt(video.prompt, e)}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.8rem', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      Voir tout <ChevronDown size={14} />
+                    </button>
+                  </div>
                   <div className="project-actions" style={{ marginTop: '1.5rem', display: 'flex', gap: '10px' }}>
                     <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="btn-apple-primary sm w-full" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <ExternalLink size={14} style={{ marginRight: '6px' }} />
@@ -343,6 +369,23 @@ function Projects({ onNavigate }) {
                   <><Layers size={18} style={{ marginRight: '8px' }} /> Lancer la fusion</>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activePrompt && (
+        <div className="modal-overlay reveal" style={{ zIndex: 2000 }} onClick={() => setActivePrompt(null)}>
+          <div className="modal-content glass reveal" style={{ maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <button className="close-btn" onClick={() => setActivePrompt(null)}><X size={20} /></button>
+            <div className="modal-header">
+              <h2 className="modal-title">Prompt complet</h2>
+            </div>
+            <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: 'var(--text-main)', padding: '10px 0' }}>
+              {activePrompt}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-apple-primary w-full" onClick={() => setActivePrompt(null)}>Fermer</button>
             </div>
           </div>
         </div>
