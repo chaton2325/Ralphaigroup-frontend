@@ -32,7 +32,7 @@ function Login({ onNavigate }) {
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth/login', { email: email.toLowerCase(), password });
 
       // Sauvegarde du token et des infos utilisateur
       localStorage.setItem('token', response.data.token);
