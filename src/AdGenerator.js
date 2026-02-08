@@ -14,7 +14,8 @@ import {
   Trophy,
   X,
   Monitor,
-  Smartphone
+  Smartphone,
+  RotateCcw
 } from 'lucide-react';
 import api from './services/api';
 
@@ -449,6 +450,32 @@ function AdGenerator({ onNavigate }) {
 
   return (
     <div className="dashboard-wrapper chat-mode-wrapper">
+      <style>{`
+        @media (max-width: 768px) {
+          .chat-input-area {
+            padding: 8px 5px !important;
+          }
+          .chat-input-row {
+            gap: 4px !important;
+          }
+          .btn-reset-chat, .btn-upload-icon, .btn-send-chat {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          .chat-textarea {
+            height: 36px !important;
+            min-height: 36px !important;
+            padding: 8px !important;
+            font-size: 14px !important;
+          }
+        }
+      `}</style>
       <div className="chat-header-simple glass reveal">
         <div className="chat-header-info">
           <div className="bot-avatar" style={{ background: '#ec4899' }}><Sparkles size={20} color="#fff" /></div>
@@ -511,12 +538,18 @@ function AdGenerator({ onNavigate }) {
 
       <div className="chat-input-area glass reveal">
         {step === 5 ? (
-          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', padding: '10px' }}>
+          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', padding: '10px', alignItems: 'center' }}>
+            <button onClick={handleClearHistory} className="btn-apple-secondary" style={{ padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Recommencer">
+                <RotateCcw size={20} />
+            </button>
             <button onClick={() => handleLanguageSelect('Français')} className="btn-apple-secondary" style={{ minWidth: '120px' }}>Français 🇫🇷</button>
             <button onClick={() => handleLanguageSelect('English')} className="btn-apple-secondary" style={{ minWidth: '120px' }}>English 🇬🇧</button>
           </div>
         ) : step === 6 ? (
-          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', padding: '10px' }}>
+          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', padding: '10px', alignItems: 'center' }}>
+            <button onClick={handleClearHistory} className="btn-apple-secondary" style={{ padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Recommencer">
+                <RotateCcw size={20} />
+            </button>
             <button onClick={() => handleFormatSelect('mobile')} className="btn-apple-secondary" style={{ minWidth: '120px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '12px' }}>
                 <Smartphone size={24} />
                 <span>Portrait</span>
@@ -528,6 +561,9 @@ function AdGenerator({ onNavigate }) {
           </div>
         ) : (
           <form onSubmit={handleSend} className="chat-input-row lower-input">
+            <button type="button" onClick={handleClearHistory} className="btn-apple-secondary btn-reset-chat" style={{ padding: '0 10px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }} title="Recommencer à zéro">
+                <RotateCcw size={18} />
+            </button>
             <label className="btn-upload-icon" style={{ opacity: step === 3 ? 1 : 0.3, cursor: step === 3 ? 'pointer' : 'not-allowed' }}>
               <ImageIcon size={20} />
               <input type="file" accept=".jpg, .jpeg, .png" onChange={handleImageUpload} disabled={step !== 3} style={{ display: 'none' }} />

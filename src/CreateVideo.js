@@ -546,7 +546,14 @@ function CreateVideo({ onNavigate, isActive }) {
       <style>{`
         @media (max-width: 768px) {
           .chat-input-area {
-            padding: 8px 10px !important;
+            position: fixed !important;
+            bottom: 80px !important;
+            left: 0 !important;
+            right: 0 !important;
+            padding: 10px 8px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            z-index: 1000 !important;
           }
           .chat-options-bar {
             margin-bottom: 6px !important;
@@ -570,15 +577,22 @@ function CreateVideo({ onNavigate, isActive }) {
             height: 40px !important;
             min-height: 40px !important;
             padding: 8px 10px !important;
-            font-size: 14px !important;
+            font-size: 16px !important;
+            flex: 1 !important;
+          }
+          .chat-input-row {
+            width: 100% !important;
+            gap: 6px !important;
+            box-sizing: border-box !important;
           }
           .btn-send-chat, .btn-upload-icon {
             width: 40px !important;
             height: 40px !important;
             min-width: 40px !important;
+            flex-shrink: 0 !important;
           }
           .chat-messages {
-            padding-bottom: 120px !important;
+            padding-bottom: 180px !important;
           }
         }
       `}</style>
