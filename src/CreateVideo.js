@@ -22,6 +22,7 @@ import {
   Trash2
 } from 'lucide-react';
 import api from './services/api';
+import { useTranslation } from './LanguageContext';
 
 const Typewriter = ({ text, onComplete }) => {
   const [display, setDisplay] = useState('');
@@ -47,6 +48,7 @@ const Typewriter = ({ text, onComplete }) => {
 };
 
 function CreateVideo({ onNavigate, isActive }) {
+  const { t } = useTranslation();
   const [prompt, setPrompt] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -73,7 +75,7 @@ function CreateVideo({ onNavigate, isActive }) {
     return [{
       id: 'welcome',
       type: 'bot',
-      content: "Bienvenue dans le Studio Créatif. 👋 \n\nJe suis prêt à donner vie à vos idées. Décrivez votre concept, envoyez une photo de référence si vous le souhaitez, et je génère votre vidéo 8k haute performance.",
+      content: t('welcomeStudio'),
       animate: true
     }];
   });
@@ -181,7 +183,7 @@ function CreateVideo({ onNavigate, isActive }) {
             const uploadData = await uploadRes.json();
             setPreviewUrl(`${uploadData.url}?t=${Date.now()}`);
             setCloudinaryUrl(uploadData.url);
-            setPrompt("Suite de la vidéo : ");
+            setPrompt(t('cv_sequel_prefix'));
             document.querySelector('.chat-textarea')?.focus();
         } catch (err) {
             setError("Erreur upload frame.");
@@ -205,7 +207,7 @@ function CreateVideo({ onNavigate, isActive }) {
     setMessages(prev => [...prev, {
       id: Date.now(),
       type: 'bot',
-      content: `🎬 **Fusion de Séquences**\n\nOrganisez vos scènes avant la fusion finale.`,
+      content: t('cv_merge_title'),
       isMergeConfirmation: true,
       animate: true
     }]);
@@ -214,7 +216,7 @@ function CreateVideo({ onNavigate, isActive }) {
 
   const cancelMerge = () => {
     setMessages(prev => prev.map(msg => 
-      msg.isMergeConfirmation ? { ...msg, isMergeConfirmation: false, content: "Fusion annulée.", animate: true } : msg
+      msg.isMergeConfirmation ? { ...msg, isMergeConfirmation: false, content: t('cv_merge_canceled'), animate: true } : msg
     ));
   };
 
@@ -236,7 +238,7 @@ function CreateVideo({ onNavigate, isActive }) {
 
   const executeMerge = async () => {
     setMessages(prev => prev.map(msg => 
-      msg.isMergeConfirmation ? { ...msg, isMergeConfirmation: false, content: "Fusion confirmée. Traitement en cours...", animate: true } : msg
+      msg.isMergeConfirmation ? { ...msg, isMergeConfirmation: false, content: t('cv_merge_confirmed'), animate: true } : msg
     ));
 
     if (merging || mergeList.length < 2) return;
@@ -249,7 +251,7 @@ function CreateVideo({ onNavigate, isActive }) {
     setMessages(prev => [...prev, {
         id: mergeMsgId,
         type: 'bot',
-        content: `Préparation de la fusion de ${mergeList.length} vidéos... (cela peut prendre du temps)`,
+        content: t('cv_merge_prep', { count: mergeList.length }),
         isProcessing: true,
         animate: true
     }]);
@@ -281,7 +283,7 @@ function CreateVideo({ onNavigate, isActive }) {
         clearInterval(progressInterval);
         setMergeProgress(100);
         setMessages(prev => prev.map(msg => 
-            msg.id === mergeMsgId ? { ...msg, content: `Finalisation...`, isProcessing: true, animate: true } : msg
+            msg.id === mergeMsgId ? { ...msg, content: t('cv_finalizing'), isProcessing: true, animate: true } : msg
         ));
 
         let url = URL.createObjectURL(mergedBlob);
@@ -306,7 +308,7 @@ function CreateVideo({ onNavigate, isActive }) {
         setMessages(prev => prev.map(msg => 
             msg.id === mergeMsgId ? { 
                 ...msg, 
-                content: `Fusion terminée ! Voici le résultat des ${mergeList.length} vidéos.${savedToHistory ? ' (Sauvegardé dans vos projets)' : ''}`,
+                content: t('cv_merge_success', { count: mergeList.length, saved: savedToHistory ? t('cv_saved_project') : '' }),
                 videoUrl: url,
                 isMerged: true, // Flag pour ne pas afficher "Générer une suite"
                 isProcessing: false,
@@ -317,8 +319,8 @@ function CreateVideo({ onNavigate, isActive }) {
     } catch (err) {
         clearInterval(progressInterval);
         console.error("Erreur de fusion vidéo:", err);
-        setError("Une erreur est survenue lors de la fusion des vidéos. Cette opération peut être gourmande en ressources.");
-        setMessages(prev => prev.map(msg => msg.id === mergeMsgId ? { ...msg, isError: true, content: "La fusion a échoué.", isProcessing: false, animate: true } : msg));
+        setError(t('cv_merge_error_res'));
+        setMessages(prev => prev.map(msg => msg.id === mergeMsgId ? { ...msg, isError: true, content: t('cv_merge_failed'), isProcessing: false, animate: true } : msg));
     } finally {
         setMerging(false);
         setMergeProgress(0);
@@ -335,7 +337,7 @@ function CreateVideo({ onNavigate, isActive }) {
     const file = e.target.files[0];
     if (file) {
       if (file.type !== 'image/jpeg') {
-        setError("Format invalide. JPG uniquement.");
+        setError(t('cv_invalid_format'));
         return;
       }
       setError('');
@@ -357,7 +359,7 @@ function CreateVideo({ onNavigate, isActive }) {
         setPreviewUrl(`${uploadData.url}?t=${Date.now()}`);
         setCloudinaryUrl(uploadData.url);
       } catch (err) {
-        setError("Erreur upload image.");
+        setError(t('cv_upload_error'));
       } finally {
         setUploadingImage(false);
       }
@@ -380,7 +382,7 @@ function CreateVideo({ onNavigate, isActive }) {
         setMessages(prev => [...prev, {
           id: Date.now(),
           type: 'bot',
-          content: `⚡ **Optimisation du prompt**\n\n📝 **Original :** ${originalPrompt}\n\n✨ **Amélioré :** ${data.veo3_suggestion}\n\n(Le champ de saisie a été mis à jour)`
+          content: t('cv_optimize_title', { original: originalPrompt, improved: data.veo3_suggestion })
           , animate: true
         }]);
       }
@@ -399,7 +401,7 @@ function CreateVideo({ onNavigate, isActive }) {
       setMessages(prev => [...prev, {
         id: Date.now(),
         type: 'bot',
-        content: "⚠️ Jetons insuffisants (10 requis pour la génération).",
+        content: t('cv_tokens_insufficient'),
         isError: true,
         animate: true
       }]);
@@ -426,7 +428,7 @@ function CreateVideo({ onNavigate, isActive }) {
     setMessages(prev => [...prev, userMsg, {
       id: Date.now() + 1,
       type: 'bot',
-      content: `Voulez-vous vraiment générer la vidéo pour ce prompt : "${prompt}" ?\n\nCoût de la génération : 10 jetons.`,
+      content: t('cv_confirm_gen', { prompt }),
       image: cloudinaryUrl,
       isConfirmation: true,
       animate: true
@@ -442,7 +444,7 @@ function CreateVideo({ onNavigate, isActive }) {
     if (!pendingData) return;
 
     setMessages(prev => prev.map(msg => 
-      msg.isConfirmation ? { ...msg, isConfirmation: false, content: "Confirmation reçue. Génération en cours...", animate: true } : msg
+      msg.isConfirmation ? { ...msg, isConfirmation: false, content: t('cv_conf_received'), animate: true } : msg
     ));
 
     setLoading(true);
@@ -471,7 +473,7 @@ function CreateVideo({ onNavigate, isActive }) {
         id: Date.now() + 1,
         type: 'bot',
         videoUrl: response.data.url,
-        content: "Opération terminée avec succès. Voici votre création.",
+        content: t('cv_success_gen'),
         animate: true
       }]);
 
@@ -485,7 +487,7 @@ function CreateVideo({ onNavigate, isActive }) {
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         type: 'bot',
-        content: "Une erreur critique est survenue lors de la génération.",
+        content: t('cv_critical_error'),
         isError: true,
         animate: true
       }]);
@@ -497,7 +499,7 @@ function CreateVideo({ onNavigate, isActive }) {
 
   const handleCancel = () => {
     setMessages(prev => prev.map(msg => 
-      msg.isConfirmation ? { ...msg, isConfirmation: false, content: "Génération annulée.", animate: true } : msg
+      msg.isConfirmation ? { ...msg, isConfirmation: false, content: t('cv_gen_canceled'), animate: true } : msg
     ));
     setPendingData(null);
   };
@@ -509,7 +511,7 @@ function CreateVideo({ onNavigate, isActive }) {
       setPackages(response.data);
       setShowModal(true);
     } catch (err) {
-      alert("Erreur offres.");
+      alert(t('cv_offer_error'));
     } finally {
       setPaymentLoading(false);
     }
@@ -533,7 +535,7 @@ function CreateVideo({ onNavigate, isActive }) {
     setMessages([{
       id: 'welcome',
       type: 'bot',
-      content: "Bienvenue dans le Studio Créatif. 👋 \n\nJe suis prêt à donner vie à vos idées. Décrivez votre concept, envoyez une photo de référence si vous le souhaitez, et je génère votre vidéo 8k haute performance.",
+      content: t('welcomeStudio'),
       animate: true
     }]);
     localStorage.removeItem('chat_history');
@@ -600,10 +602,10 @@ function CreateVideo({ onNavigate, isActive }) {
         <div className="chat-header-info">
           <div className="bot-avatar"><Sparkles size={20} color="#fff" /></div>
           <div>
-            <h3>Studio Creative Engine</h3>
+            <h3>{t('studioEngine')}</h3>
             <div className="chat-status">
               <span className="status-dot"></span>
-              <small>Optimisé par VEO3 • {user.tokens || 0} jetons</small>
+              <small>{t('optimizedBy')} • {user.tokens || 0} {t('tokens')}</small>
             </div>
           </div>
         </div>
@@ -612,7 +614,7 @@ function CreateVideo({ onNavigate, isActive }) {
             className="btn-add-token-small" 
             onClick={handleClearHistory} 
             style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}
-            title="Effacer l'historique"
+            title={t('clearHistory')}
           >
             <Trash2 size={16} />
           </button>
@@ -654,7 +656,7 @@ function CreateVideo({ onNavigate, isActive }) {
                       background: 'var(--accent)', color: 'white', cursor: 'pointer'
                     }}
                   >
-                    <CheckCircle2 size={16} /> Confirmer
+                    <CheckCircle2 size={16} /> {t('confirm')}
                   </button>
                   <button 
                     onClick={handleCancel}
@@ -664,7 +666,7 @@ function CreateVideo({ onNavigate, isActive }) {
                       background: 'rgba(255,255,255,0.1)', color: 'var(--text-main)', cursor: 'pointer'
                     }}
                   >
-                    <X size={16} /> Annuler
+                    <X size={16} /> {t('cancel')}
                   </button>
                 </div>
               )}
@@ -674,7 +676,7 @@ function CreateVideo({ onNavigate, isActive }) {
                   <div style={{ display: 'flex', gap: '10px', marginTop: '8px', flexWrap: 'wrap' }}>
                     <a href={msg.videoUrl} download={`ralpai-video-${msg.id}.mp4`} className="download-link-apple">
                       <Download size={14} style={{ marginRight: '6px' }} />
-                      Enregistrer
+                      {t('save')}
                     </a>
                     {!msg.isMerged && (
                       <button 
@@ -690,7 +692,7 @@ function CreateVideo({ onNavigate, isActive }) {
                         }}
                       >
                         <Film size={14} style={{ marginRight: '6px' }} />
-                        Générer une suite
+                        {t('generateSequel')}
                       </button>
                     )}
                   </div>
@@ -698,7 +700,7 @@ function CreateVideo({ onNavigate, isActive }) {
               )}
               {msg.isMergeConfirmation && (
                 <div style={{ marginTop: '15px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '15px' }}>
-                  <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Ordre de fusion :</h4>
+                  <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{t('mergeOrder')}</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '15px' }}>
                     {mergeList.map((video, idx) => (
                       <div key={video.id} style={{ 
@@ -708,7 +710,7 @@ function CreateVideo({ onNavigate, isActive }) {
                         <span style={{ fontWeight: 'bold', color: 'var(--text-muted)', width: '20px' }}>{idx + 1}</span>
                         <video src={video.videoUrl} controls style={{ width: '100px', height: '60px', objectFit: 'cover', borderRadius: '4px', backgroundColor: '#000' }} />
                         <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
-                          Scène {idx + 1}
+                          {t('scene')} {idx + 1}
                         </div>
                         <div style={{ display: 'flex', gap: '4px' }}>
                           <button onClick={() => moveVideo(idx, 'up')} disabled={idx === 0} style={{ padding: '4px', background: 'none', border: 'none', color: 'var(--text-main)', cursor: 'pointer', opacity: idx === 0 ? 0.3 : 1 }}>
@@ -723,7 +725,7 @@ function CreateVideo({ onNavigate, isActive }) {
                         </div>
                       </div>
                     ))}
-                    {mergeList.length < 2 && <div style={{textAlign: 'center', padding: '10px', color: '#ef4444', fontSize: '0.8rem'}}>Sélectionnez au moins 2 vidéos</div>}
+                    {mergeList.length < 2 && <div style={{textAlign: 'center', padding: '10px', color: '#ef4444', fontSize: '0.8rem'}}>{t('selectTwoVideos')}</div>}
                   </div>
                   <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                   <button 
@@ -736,7 +738,7 @@ function CreateVideo({ onNavigate, isActive }) {
                       cursor: mergeList.length < 2 ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    <CheckCircle2 size={16} /> Fusionner
+                    <CheckCircle2 size={16} /> {t('merge')}
                   </button>
                   <button 
                     onClick={cancelMerge}
@@ -746,7 +748,7 @@ function CreateVideo({ onNavigate, isActive }) {
                       background: 'rgba(255,255,255,0.1)', color: 'var(--text-main)', cursor: 'pointer'
                     }}
                   >
-                    <X size={16} /> Annuler
+                    <X size={16} /> {t('cancel')}
                   </button>
                   </div>
                 </div>
@@ -782,8 +784,8 @@ function CreateVideo({ onNavigate, isActive }) {
 
         <div className="chat-options-bar">
           <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} className="chat-option-select">
-            <option value="pc">Paysage (16:9)</option>
-            <option value="mobile">Portrait (9:16)</option>
+            <option value="pc">{t('landscapeRatio')}</option>
+            <option value="mobile">{t('portraitRatio')}</option>
           </select>
           <select value={language} onChange={(e) => setLanguage(e.target.value)} className="chat-option-select">
             <option value="fr">Français (FR)</option>
@@ -809,9 +811,9 @@ function CreateVideo({ onNavigate, isActive }) {
             }}
           >
             <Zap size={14} fill="currentColor" />
-            {optimizing ? 'Optimisation...' : 'Améliorer le prompt'}
+            {optimizing ? t('optimizing') : t('improvePrompt')}
           </button>
-          <div className="chat-option-badge">8s High Fidelity</div>
+          <div className="chat-option-badge">{t('highFidelity')}</div>
           {generatedVideos.length > 1 && (
             <button 
               type="button"
@@ -837,12 +839,12 @@ function CreateVideo({ onNavigate, isActive }) {
               {merging ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  Fusion... {mergeProgress > 0 && `${mergeProgress}%`}
+                  {t('merging')} {mergeProgress > 0 && `${mergeProgress}%`}
                 </>
               ) : (
                 <>
                   <Layers size={14} />
-                  Fusionner
+                  {t('merge')}
                 </>
               )}
             </button>
@@ -857,7 +859,7 @@ function CreateVideo({ onNavigate, isActive }) {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder={uploadingImage ? "Traitement image..." : "Expliquez votre vision..."}
+            placeholder={uploadingImage ? t('processingImage') : t('explainVision')}
             className="chat-textarea"
             rows="3"
             onKeyDown={(e) => {
@@ -878,17 +880,17 @@ function CreateVideo({ onNavigate, isActive }) {
           <div className="modal-content glass reveal">
             <button className="close-btn" onClick={() => setShowModal(false)}><X size={20} /></button>
             <div className="modal-header">
-              <h2 className="modal-title">Propulsez vos projets</h2>
-              <p className="modal-subtitle">Plus de jetons pour une créativité sans limites</p>
+              <h2 className="modal-title">{t('propelProjects')}</h2>
+              <p className="modal-subtitle">{t('limitlessCreativity')}</p>
             </div>
             <div className="packages-grid">
               {packages.map((pkg, index) => (
                 <div key={pkg.id} className={`package-card reveal ${index === 1 ? 'popular' : ''}`}>
-                  {index === 1 && <div className="popular-badge"><Trophy size={12} style={{ marginRight: '4px' }} /> Recommandé</div>}
+                  {index === 1 && <div className="popular-badge"><Trophy size={12} style={{ marginRight: '4px' }} /> {t('recommended')}</div>}
                   <h3 className="package-name">{pkg.name}</h3>
                   <div className="package-price">{(pkg.price / 100).toFixed(2)}€</div>
-                  <div className="package-tokens"><Zap size={18} fill="currentColor" /> {pkg.tokens} Jetons</div>
-                  <button className="btn-package-select" onClick={() => handleBuyPackage(pkg.id)} disabled={paymentLoading}>Choisir</button>
+                  <div className="package-tokens"><Zap size={18} fill="currentColor" /> {pkg.tokens} {t('tokens')}</div>
+                  <button className="btn-package-select" onClick={() => handleBuyPackage(pkg.id)} disabled={paymentLoading}>{t('choose')}</button>
                 </div>
               ))}
             </div>
@@ -900,11 +902,11 @@ function CreateVideo({ onNavigate, isActive }) {
         <div className="modal-overlay reveal" style={{ zIndex: 2000 }}>
           <div className="modal-content glass reveal" style={{ maxWidth: '400px', textAlign: 'center' }}>
             <div className="modal-header" style={{ justifyContent: 'center', marginBottom: '10px' }}>
-              <h2 className="modal-title">Effacer l'historique ?</h2>
+              <h2 className="modal-title">{t('clearHistoryTitle')}</h2>
             </div>
             <p style={{ marginBottom: '20px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-              Voulez-vous vraiment supprimer l'historique de chat ?<br/><br/>
-              <small style={{ opacity: 0.8 }}>Note : Ce chat est stocké localement et n'est visible sur aucun autre appareil.</small>
+              {t('clearHistoryConfirm')}<br/><br/>
+              <small style={{ opacity: 0.8 }}>{t('clearHistoryNote')}</small>
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button 
@@ -912,14 +914,14 @@ function CreateVideo({ onNavigate, isActive }) {
                 onClick={() => setShowClearHistoryModal(false)}
                 style={{ justifyContent: 'center' }}
               >
-                Annuler
+                {t('cancel')}
               </button>
               <button 
                 className="btn-apple-primary w-full" 
                 onClick={confirmClearHistory}
                 style={{ justifyContent: 'center', background: '#ef4444', borderColor: '#ef4444' }}
               >
-                Supprimer
+                {t('delete')}
               </button>
             </div>
           </div>

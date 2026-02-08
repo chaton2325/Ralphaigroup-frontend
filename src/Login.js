@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import api from './services/api';
+import { useTranslation } from './LanguageContext';
 
 function Login({ onNavigate }) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showForgot, setShowForgot] = useState(false);
@@ -55,51 +57,51 @@ function Login({ onNavigate }) {
       <div className="auth-left reveal">
         <img src="/image/favicon.jpg" alt="ralp-ai logo" className="auth-brand-logo" />
         <h1 className="auth-brand-name">ralp-ai</h1>
-        <p className="auth-brand-desc">Accédez à l'excellence technologique. Studio de création vidéo haute performance.</p>
+        <p className="auth-brand-desc">{t('accessExcellence')}</p>
       </div>
 
       <div className="auth-right reveal">
         <div className="auth-card-apple glass">
           {showForgot ? (
             <>
-              <h2 className="auth-title">Réinitialiser</h2>
+              <h2 className="auth-title">{t('reset')}</h2>
               {error && <div className="error-pill">{error}</div>}
               {forgotMessage && <div style={{ color: 'green', textAlign: 'center', marginBottom: '1rem', padding: '0.5rem', background: 'rgba(0,255,0,0.1)', borderRadius: '8px' }}>{forgotMessage}</div>}
               <form onSubmit={handleForgotSubmit} className="auth-form">
                 <div className="form-group-apple">
-                  <label>Email</label>
+                  <label>{t('email')}</label>
                   <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="votre@email.com" required />
                 </div>
                 <button type="submit" className="btn-apple-primary w-full" disabled={loading}>
-                  {loading ? 'Envoi...' : 'Envoyer le lien'}
+                  {loading ? 'Envoi...' : t('sendLink')}
                 </button>
               </form>
               <div className="auth-footer-link">
-                <a href="#" onClick={(e) => { e.preventDefault(); setShowForgot(false); setError(''); setForgotMessage(''); }}>Retour à la connexion</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); setShowForgot(false); setError(''); setForgotMessage(''); }}>{t('backLogin')}</a>
               </div>
             </>
           ) : (
             <>
-              <h2 className="auth-title">Connexion</h2>
+              <h2 className="auth-title">{t('login')}</h2>
               {error && <div className="error-pill">{error}</div>}
               <form onSubmit={handleSubmit} className="auth-form">
                 <div className="form-group-apple">
-                  <label>Email</label>
+                  <label>{t('email')}</label>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.com" required />
                 </div>
                 <div className="form-group-apple">
-                  <label>Mot de passe</label>
+                  <label>{t('password')}</label>
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
                 </div>
                 <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
-                  <a href="#" onClick={(e) => { e.preventDefault(); setShowForgot(true); setError(''); }} style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textDecoration: 'none' }}>Mot de passe oublié ?</a>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setShowForgot(true); setError(''); }} style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textDecoration: 'none' }}>{t('forgotPassword')}</a>
                 </div>
                 <button type="submit" className="btn-apple-primary w-full" disabled={loading}>
-                  {loading ? 'Connexion...' : 'Se connecter'}
+                  {loading ? t('connecting') : t('login')}
                 </button>
               </form>
               <div className="auth-footer-link">
-                Pas encore de compte ? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('signup') }}>S'inscrire</a>
+                {t('noAccount')} <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('signup') }}>{t('signup')}</a>
               </div>
             </>
           )}

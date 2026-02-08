@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import api from './services/api';
+import { useTranslation } from './LanguageContext';
 
 function Signup({ onNavigate }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ username: '', email: '', emailConfirm: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,36 +38,36 @@ function Signup({ onNavigate }) {
       <div className="auth-left reveal">
         <img src="/image/favicon.jpg" alt="ralp-ai logo" className="auth-brand-logo" />
         <h1 className="auth-brand-name">ralp-ai</h1>
-        <p className="auth-brand-desc">Rejoignez l'élite créative. Des vidéos professionnelles à la portée de votre imagination.</p>
+        <p className="auth-brand-desc">{t('joinElite')}</p>
       </div>
 
       <div className="auth-right reveal">
         <div className="auth-card-apple glass">
-          <h2 className="auth-title">Créer un compte</h2>
+          <h2 className="auth-title">{t('createAccount')}</h2>
           {error && <div className="error-pill">{error}</div>}
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group-apple">
-              <label>Nom complet</label>
+              <label>{t('fullName')}</label>
               <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="Jean Dupont" required />
             </div>
             <div className="form-group-apple">
-              <label>Email</label>
+              <label>{t('email')}</label>
               <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="votre@email.com" required />
             </div>
             <div className="form-group-apple">
-              <label>Confirmer Email</label>
+              <label>{t('confirmEmail')}</label>
               <input type="email" name="emailConfirm" value={formData.emailConfirm} onChange={handleChange} placeholder="Retapez votre email" required />
             </div>
             <div className="form-group-apple">
-              <label>Mot de passe</label>
+              <label>{t('password')}</label>
               <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required />
             </div>
             <button type="submit" className="btn-apple-primary w-full" disabled={loading}>
-              {loading ? 'Inscription...' : 'S\'inscrire gratuitement'}
+              {loading ? t('registering') : t('registerFree')}
             </button>
           </form>
           <div className="auth-footer-link">
-            Déjà un compte ? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('login') }}>Se connecter</a>
+            {t('alreadyAccount')} <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('login') }}>{t('login')}</a>
           </div>
         </div>
       </div>

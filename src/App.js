@@ -24,6 +24,7 @@ import {
   ShoppingBag
 } from 'lucide-react';
 import './App.css';
+import { useTranslation } from './LanguageContext';
 import Login from './Login';
 import Signup from './Signup';
 import Footer from './Footer';
@@ -38,6 +39,7 @@ function App() {
     return localStorage.getItem('token') ? 'dashboard' : 'home';
   });
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const { t, language, toggleLanguage } = useTranslation();
 
   const isAuthPage = ['dashboard', 'projects', 'create', 'ad-generator'].includes(currentPage);
 
@@ -88,19 +90,19 @@ function App() {
                   <span>Propulsé par VEO3 AI</span>
                 </div>
                 <h1 className="hero-title-apple">
-                  Créez l'extraordinaire.<br />En quelques secondes.
+                  {t('heroTitle').split('\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>)}
                 </h1>
                 <p className="hero-subtitle-apple">
-                  Générez des vidéos publicitaires et du contenu viral avec une fluidité inégalée.
+                  {t('heroSubtitle')}
                 </p>
                 <div className="hero-actions">
                   <button className="btn-apple-primary" onClick={() => setCurrentPage('signup')}>
-                    Commencer l'aventure
+                    {t('startAdventure')}
                   </button>
                   <button className="btn-apple-secondary" onClick={() => {
                     document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' });
                   }}>
-                    Voir la démo
+                    {t('viewDemo')}
                   </button>
                 </div>
               </div>
@@ -114,8 +116,8 @@ function App() {
                     <Play size={14} />
                     <span>DÉMO INTERACTIVE</span>
                   </div>
-                  <h2>Comment ça marche ?</h2>
-                  <p>Trois étapes simples pour créer des vidéos exceptionnelles</p>
+                  <h2>{t('howItWorks')}</h2>
+                  <p>{t('threeSteps')}</p>
                 </div>
 
                 <div className="demo-workflow">
@@ -130,14 +132,14 @@ function App() {
                       </div>
                       <div className="step-animation chat-animation">
                         <div className="fake-input">
-                          <span className="typing-text">Une publicité pour une montre de luxe...</span>
+                          <span className="typing-text">{t('demoInput')}</span>
                           <span className="cursor-blink"></span>
                         </div>
                       </div>
                     </div>
                     <div className="step-content">
-                      <h3>Décrivez votre vision</h3>
-                      <p>Expliquez simplement ce que vous voulez créer. Notre IA comprend le contexte et vos intentions.</p>
+                      <h3>{t('step1Title')}</h3>
+                      <p>{t('step1Desc')}</p>
                     </div>
                   </div>
 
@@ -165,8 +167,8 @@ function App() {
                       </div>
                     </div>
                     <div className="step-content">
-                      <h3>L'IA génère</h3>
-                      <p>VEO3 analyse votre demande et crée une vidéo 8K haute fidélité en quelques secondes.</p>
+                      <h3>{t('step2Title')}</h3>
+                      <p>{t('step2Desc')}</p>
                     </div>
                   </div>
 
@@ -197,15 +199,15 @@ function App() {
                       </div>
                     </div>
                     <div className="step-content">
-                      <h3>Téléchargez</h3>
-                      <p>Votre vidéo est prête. Téléchargez-la instantanément et partagez-la sur vos plateformes.</p>
+                      <h3>{t('step3Title')}</h3>
+                      <p>{t('step3Desc')}</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="demo-cta reveal">
                   <button className="btn-apple-primary" onClick={() => setCurrentPage('signup')}>
-                    Essayer maintenant
+                    {t('tryNow')}
                     <ArrowRight size={18} style={{ marginLeft: '8px' }} />
                   </button>
                 </div>
@@ -221,8 +223,8 @@ function App() {
                       <Globe size={14} style={{ marginRight: '8px' }} />
                       GLOBAL
                     </div>
-                    <h2>Parlez toutes les langues.</h2>
-                    <p>Générez vos contenus en Français et en Anglais. Touchez le monde entier sans la moindre barrière.</p>
+                    <h2>{t('globalTitle')}</h2>
+                    <p>{t('globalDesc')}</p>
                   </div>
                   <div className="feature-visual reveal">
                     <div className="glass-card">
@@ -240,15 +242,15 @@ function App() {
               <div className="container-apple">
                 <div className="promo-card-apple reveal">
                   <div className="promo-info">
-                    <span className="badge-promo">OFFRE LIMITÉE</span>
-                    <h3>Boostez votre créativité.</h3>
+                    <span className="badge-promo">{t('limitedOffer')}</span>
+                    <h3>{t('boostCreativity')}</h3>
                     <div className="pricing-apple">
                       <span className="price-big">10€</span>
-                      <span className="price-label">pour 20 + 5 jetons offerts</span>
+                      <span className="price-label">{t('offerTokens')}</span>
                     </div>
                   </div>
                   <button className="btn-apple-primary" onClick={() => setCurrentPage('signup')}>
-                    Profiter de l'offre
+                    {t('getOffer')}
                   </button>
                 </div>
               </div>
@@ -258,8 +260,8 @@ function App() {
             <section className="section-apple">
               <div className="container-apple">
                 <div className="section-header reveal">
-                  <h2>Tous vos formats préférés.</h2>
-                  <p>Adapté pour TikTok, Reels, YouTube et plus encore.</p>
+                  <h2>{t('formatsTitle')}</h2>
+                  <p>{t('formatsDesc')}</p>
                 </div>
 
                 <div className="formats-grid-apple">
@@ -267,15 +269,15 @@ function App() {
                     <div className="video-wrap portrait">
                       <video src="videos/demo-portrait.mp4" autoPlay loop muted playsInline />
                     </div>
-                    <h4>Vertical</h4>
-                    <p>TikTok & Reels</p>
+                    <h4>{t('verticalFormat')}</h4>
+                    <p>{t('tiktokReels')}</p>
                   </div>
                   <div className="format-item reveal" style={{ animationDelay: '0.2s' }}>
                     <div className="video-wrap landscape">
                       <video src="videos/demo-paysage.mp4" autoPlay loop muted playsInline />
                     </div>
-                    <h4>Paysage</h4>
-                    <p>YouTube & Web</p>
+                    <h4>{t('landscapeFormat')}</h4>
+                    <p>{t('youtubeWeb')}</p>
                   </div>
                 </div>
               </div>
@@ -301,29 +303,29 @@ function App() {
         <nav className="mobile-nav">
           <button className={`mobile-nav-item ${currentPage === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentPage('dashboard')}>
             <BarChart3 size={20} />
-            <span className="nav-label">Accueil</span>
+            <span className="nav-label">{t('home')}</span>
           </button>
 
           <button className={`mobile-nav-item ${currentPage === 'create' ? 'active' : ''}`} onClick={() => setCurrentPage('create')}>
             <div className="nav-icon-highlight">
               <PlusSquare size={24} />
             </div>
-            <span className="nav-label">Créer</span>
+            <span className="nav-label">{t('create')}</span>
           </button>
 
           <button className={`mobile-nav-item ${currentPage === 'ad-generator' ? 'active' : ''}`} onClick={() => setCurrentPage('ad-generator')}>
             <ShoppingBag size={20} />
-            <span className="nav-label">Pub</span>
+            <span className="nav-label">{t('pub')}</span>
           </button>
 
           <button className={`mobile-nav-item ${currentPage === 'projects' ? 'active' : ''}`} onClick={() => setCurrentPage('projects')}>
             <FolderRoot size={20} />
-            <span className="nav-label">Projets</span>
+            <span className="nav-label">{t('projects')}</span>
           </button>
 
           <button className={`mobile-nav-item ${showMobileMenu ? 'active' : ''}`} onClick={() => setShowMobileMenu(true)}>
             <User size={20} />
-            <span className="nav-label">Profil</span>
+            <span className="nav-label">{t('profile')}</span>
           </button>
         </nav>
 
@@ -349,32 +351,37 @@ function App() {
               <div className="mobile-menu-tokens">
                 <Zap size={18} />
                 <span className="tokens-value">{user.tokens || 0}</span>
-                <span className="tokens-label">jetons disponibles</span>
+                <span className="tokens-label">{t('tokensAvailable')}</span>
               </div>
 
               <div className="mobile-menu-actions">
                 <button className="mobile-menu-item" onClick={() => { setCurrentPage('dashboard'); setShowMobileMenu(false); }}>
                   <BarChart3 size={20} />
-                  <span>Tableau de bord</span>
+                  <span>{t('dashboard')}</span>
                 </button>
                 <button className="mobile-menu-item" onClick={() => { setCurrentPage('projects'); setShowMobileMenu(false); }}>
                   <FolderRoot size={20} />
-                  <span>Mes projets</span>
+                  <span>{t('myProjects')}</span>
                 </button>
                 <button className="mobile-menu-item" onClick={() => { setCurrentPage('create'); setShowMobileMenu(false); }}>
                   <PlusSquare size={20} />
-                  <span>Créer une vidéo</span>
+                  <span>{t('newCreation')}</span>
                 </button>
                 <button className="mobile-menu-item" onClick={() => { setCurrentPage('ad-generator'); setShowMobileMenu(false); }}>
                   <ShoppingBag size={20} />
-                  <span>Générateur Pub</span>
+                  <span>{t('adGenerator')}</span>
                 </button>
               </div>
+              
+              <button className="mobile-menu-item" onClick={toggleLanguage} style={{ marginBottom: '10px' }}>
+                <Globe size={20} />
+                <span>{language === 'fr' ? 'English' : 'Français'}</span>
+              </button>
 
               <div className="mobile-menu-footer">
                 <button className="mobile-menu-logout" onClick={handleLogout}>
                   <LogOut size={18} />
-                  <span>Déconnexion</span>
+                  <span>{t('logout')}</span>
                 </button>
               </div>
             </div>
@@ -394,8 +401,11 @@ function App() {
           </div>
 
           <div className="auth-buttons-apple">
-            <button className="btn-link" onClick={() => setCurrentPage('login')}>Se connecter</button>
-            <button className="btn-apple-primary sm" onClick={() => setCurrentPage('signup')}>S'inscrire</button>
+            <button className="btn-link" onClick={toggleLanguage} style={{ marginRight: '5px', fontWeight: '600', minWidth: '40px' }}>
+              {language === 'fr' ? 'EN' : 'FR'}
+            </button>
+            <button className="btn-link" onClick={() => setCurrentPage('login')}>{t('login')}</button>
+            <button className="btn-apple-primary sm" onClick={() => setCurrentPage('signup')}>{t('signup')}</button>
           </div>
         </div>
       </header>

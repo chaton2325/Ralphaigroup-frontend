@@ -1,7 +1,9 @@
 import React from 'react';
-import { LayoutDashboard, PlusCircle, FolderHeart, LogOut, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, FolderHeart, LogOut, ShoppingBag, Globe } from 'lucide-react';
+import { useTranslation } from './LanguageContext';
 
 function Sidebar({ currentPage, onNavigate }) {
+  const { t, language, toggleLanguage } = useTranslation();
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -23,34 +25,38 @@ function Sidebar({ currentPage, onNavigate }) {
           onClick={() => onNavigate('dashboard')}
         >
           <LayoutDashboard size={18} />
-          <span>Tableau de bord</span>
+          <span>{t('dashboard')}</span>
         </button>
         <button
           className={`nav-item ${currentPage === 'create' ? 'active' : ''}`}
           onClick={() => onNavigate('create')}
         >
           <PlusCircle size={18} />
-          <span>Nouvelle Création</span>
+          <span>{t('newCreation')}</span>
         </button>
         <button
           className={`nav-item ${currentPage === 'ad-generator' ? 'active' : ''}`}
           onClick={() => onNavigate('ad-generator')}
         >
           <ShoppingBag size={18} />
-          <span>Générateur Pub</span>
+          <span>{t('adGenerator')}</span>
         </button>
         <button
           className={`nav-item ${currentPage === 'projects' ? 'active' : ''}`}
           onClick={() => onNavigate('projects')}
         >
           <FolderHeart size={18} />
-          <span>Mes Projets</span>
+          <span>{t('myProjects')}</span>
         </button>
       </nav>
       <div className="sidebar-footer">
+        <button className="nav-item" onClick={toggleLanguage}>
+          <Globe size={18} />
+          <span>{language === 'fr' ? 'English' : 'Français'}</span>
+        </button>
         <button className="nav-item logout" onClick={handleLogout}>
           <LogOut size={18} />
-          <span>Déconnexion</span>
+          <span>{t('logout')}</span>
         </button>
       </div>
     </div>

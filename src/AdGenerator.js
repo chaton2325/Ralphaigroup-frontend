@@ -18,6 +18,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import api from './services/api';
+import { useTranslation } from './LanguageContext';
 
 const Typewriter = ({ text, onComplete }) => {
   const [display, setDisplay] = useState('');
@@ -43,6 +44,7 @@ const Typewriter = ({ text, onComplete }) => {
 };
 
 function AdGenerator({ onNavigate }) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('ad_chat_history');
     if (saved) {
@@ -51,7 +53,7 @@ function AdGenerator({ onNavigate }) {
     return [{
       id: 'welcome',
       type: 'bot',
-      content: "Bonjour ! Je suis votre expert en publicité vidéo. (08 secondes pour le moment) 👋\n\nPour commencer, quel est le nom du produit que vous souhaitez mettre en avant ?",
+      content: t('ad_welcome'),
       animate: true
     }];
   });
@@ -110,7 +112,7 @@ function AdGenerator({ onNavigate }) {
     setMessages([{
       id: 'welcome',
       type: 'bot',
-      content: "Bonjour ! Je suis votre expert en publicité vidéo. 👋\n\nPour commencer, quel est le nom du produit que vous souhaitez mettre en avant ?",
+      content: t('ad_welcome'),
       animate: true
     }]);
     setStep(0);
@@ -130,7 +132,7 @@ function AdGenerator({ onNavigate }) {
         // Si plus de 10 minutes, on abandonne
         if (Date.now() - timestamp > 600000) {
           localStorage.removeItem('ad_pending_generation');
-          setMessages(prev => prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: "Le traitement a pris trop de temps ou a échoué.", isError: true } : m));
+          setMessages(prev => prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: t('ad_bg_timeout'), isError: true } : m));
           return;
         }
 
@@ -141,12 +143,12 @@ function AdGenerator({ onNavigate }) {
 
         if (match) {
           setMessages(prev => {
-            const clean = prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: "Génération terminée en arrière-plan.", animate: true } : m);
+            const clean = prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: t('ad_bg_complete'), animate: true } : m);
             if (!clean.some(m => m.videoUrl === match.video_url)) {
                 clean.push({
                     id: Date.now(),
                     type: 'bot',
-                    content: "Voici votre vidéo (récupérée) :",
+                    content: t('ad_video_recovered'),
                     videoUrl: match.video_url,
                     animate: true
                 });
@@ -174,7 +176,7 @@ function AdGenerator({ onNavigate }) {
       setPackages(response.data);
       setShowModal(true);
     } catch (err) {
-      alert("Erreur chargement offres.");
+      alert(t('ad_offer_error'));
     } finally {
       setPaymentLoading(false);
     }
@@ -208,22 +210,22 @@ function AdGenerator({ onNavigate }) {
     switch (step) {
       case 0: // Nom -> Envie
         nextFormData.productName = userText;
-        botResponse = "Noté. Quelle émotion ou envie souhaitez-vous susciter chez votre audience ? (ex: Luxe, Rapidité, Confort...)";
+        botResponse = t('ad_step0_resp');
         break;
       case 1: // Envie -> Points clés
         nextFormData.desire = userText;
-        botResponse = "Très bien. Quels sont les points clés ou fonctionnalités principales à mettre en avant ?";
+        botResponse = t('ad_step1_resp');
         break;
       case 2: // Points clés -> Image
         nextFormData.keyPoints = userText;
-        botResponse = "Parfait. Veuillez maintenant télécharger une image de votre produit en cliquant sur l'icône image ci-dessous.";
+        botResponse = t('ad_step2_resp');
         break;
       case 3: // Image (si texte entré au lieu d'image)
-        setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "J'ai besoin d'une image pour continuer. Utilisez l'icône 🖼️ à gauche du champ de texte.", animate: true }]);
+        setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: t('ad_step3_error'), animate: true }]);
         return;
       case 4: // Prix -> Langue
         nextFormData.price = userText;
-        botResponse = "C'est noté. Dans quelle langue souhaitez-vous la publicité ?";
+        botResponse = t('ad_step4_resp');
         break;
       default:
         return;
@@ -242,31 +244,31 @@ function AdGenerator({ onNavigate }) {
     setFormData(nextFormData);
     setStep(6);
     setTimeout(() => {
-      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "Quel format souhaitez-vous ? (Portrait pour TikTok/Reels, Paysage pour YouTube/Web)", animate: true }]);
+      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: t('ad_format_ask'), animate: true }]);
     }, 500);
   };
 
   const handleFormatSelect = async (format) => {
-    const formatText = format === 'mobile' ? "Format Portrait (9:16)" : "Format Paysage (16:9)";
+    const formatText = format === 'mobile' ? t('ad_format_portrait') : t('ad_format_landscape');
     setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: formatText }]);
     
     const nextFormData = { ...formData, aspectRatio: format };
     setFormData(nextFormData);
     setStep(7);
     
-    setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "Analyse en cours... Je génère des concepts publicitaires optimisés pour votre produit.", isProcessing: true, animate: true }]);
+    setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: t('ad_analyzing'), isProcessing: true, animate: true }]);
     await fetchAdSuggestions(nextFormData);
   };
 
   const handleSkipPrice = () => {
-    const userText = "Non spécifié";
-    setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: "Ignorer le prix" }]);
+    const userText = t('ad_unspecified');
+    setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: t('ad_skip_price') }]);
     
     const nextFormData = { ...formData, price: userText };
     setFormData(nextFormData);
     setStep(5);
     setTimeout(() => {
-      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "C'est noté. Dans quelle langue souhaitez-vous la publicité ?", animate: true }]);
+      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: t('ad_step4_resp'), animate: true }]);
     }, 500);
   };
 
@@ -275,7 +277,7 @@ function AdGenerator({ onNavigate }) {
     if (!file) return;
 
     if (step !== 3) {
-      alert("Veuillez suivre les étapes de la conversation.");
+      alert(t('ad_follow_steps'));
       return;
     }
 
@@ -289,10 +291,10 @@ function AdGenerator({ onNavigate }) {
     reader.onloadend = () => {
       const base64 = reader.result;
       setFormData(prev => ({ ...prev, image: newFile, imageBase64: base64, imageName: uniqueName }));
-      setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: "Image envoyée", image: base64 }]);
+      setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: t('ad_img_sent'), image: base64 }]);
       setStep(4);
       setTimeout(() => {
-        setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: "Image reçue ! Quel est le prix du produit (ou une gamme de prix) ?", animate: true }]);
+        setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: t('ad_img_received'), animate: true }]);
       }, 500);
     };
     reader.readAsDataURL(newFile);
@@ -330,11 +332,11 @@ function AdGenerator({ onNavigate }) {
       
       setSuggestions(result.ad_suggestions || []);
       
-      setMessages(prev => prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: "Analyse terminée ! Voici 5 concepts publicitaires. Cliquez sur celui que vous préférez pour générer la vidéo.", animate: true } : m));
+      setMessages(prev => prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: t('ad_analysis_done'), animate: true } : m));
 
     } catch (err) {
       console.error(err);
-      setMessages(prev => prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: "Une erreur est survenue lors de l'analyse.", isError: true, animate: true } : m));
+      setMessages(prev => prev.map(m => m.isProcessing ? { ...m, isProcessing: false, content: t('ad_analysis_error'), isError: true, animate: true } : m));
     } finally {
       setLoading(false);
     }
@@ -346,7 +348,7 @@ function AdGenerator({ onNavigate }) {
       setMessages(prev => [...prev, {
         id: Date.now(),
         type: 'bot',
-        content: "⚠️ Jetons insuffisants (10 requis).",
+        content: t('ad_tokens_insufficient'),
         isError: true,
         animate: true
       }]);
@@ -360,7 +362,7 @@ function AdGenerator({ onNavigate }) {
     setMessages(prev => [...prev, {
       id: Date.now(),
       type: 'bot',
-      content: `Vous avez choisi le concept : "${suggestion}"\n\nConfirmez-vous la génération ? (Coût : 10 jetons)`,
+      content: t('ad_confirm_concept', { suggestion }),
       isConfirmation: true,
       animate: true
     }]);
@@ -372,7 +374,7 @@ function AdGenerator({ onNavigate }) {
     setPendingSuggestion(null);
     
     setMessages(prev => prev.map(msg => 
-      msg.isConfirmation ? { ...msg, isConfirmation: false, content: `Concept validé. Lancement de la production...`, animate: true } : msg
+      msg.isConfirmation ? { ...msg, isConfirmation: false, content: t('ad_concept_validated'), animate: true } : msg
     ));
 
     setLoading(true);
@@ -382,7 +384,7 @@ function AdGenerator({ onNavigate }) {
     setMessages(prev => [...prev, {
       id: msgId,
       type: 'bot',
-      content: `Excellent choix ! Téléchargement de l'image et lancement de la production...`,
+      content: t('ad_downloading_img'),
       isProcessing: true,
       animate: true
     }]);
@@ -396,7 +398,7 @@ function AdGenerator({ onNavigate }) {
       const uploadData = await uploadRes.json();
       const imageUrl = uploadData.url;
 
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, content: `Image prête. Génération de la vidéo en cours...`, animate: true } : m));
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, content: t('ad_img_ready'), animate: true } : m));
 
       // 2. Generate Video
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -418,14 +420,14 @@ function AdGenerator({ onNavigate }) {
         const updated = prev.map(m => m.id === msgId ? { 
           ...m, 
           isProcessing: false, 
-          content: "Vidéo générée avec succès !", 
+          content: t('ad_gen_success'), 
           videoUrl: genRes.data.url,
           animate: true
         } : m);
         return [...updated, {
           id: Date.now() + 1,
           type: 'bot',
-          content: "Souhaitez-vous générer une autre publicité ?",
+          content: t('ad_gen_another'),
           isEndOption: true,
           animate: true
         }];
@@ -434,7 +436,7 @@ function AdGenerator({ onNavigate }) {
     } catch (err) {
       console.error(err);
       localStorage.removeItem('ad_pending_generation');
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isProcessing: false, content: "Erreur lors de la génération de la vidéo.", isError: true, animate: true } : m));
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isProcessing: false, content: t('ad_gen_error'), isError: true, animate: true } : m));
     } finally {
       setLoading(false);
     }
@@ -444,7 +446,7 @@ function AdGenerator({ onNavigate }) {
     setPendingSuggestion(null);
     setSuggestions(savedSuggestions); // Restaurer les suggestions
     setMessages(prev => prev.map(msg => 
-      msg.isConfirmation ? { ...msg, isConfirmation: false, content: "Génération annulée." } : msg
+      msg.isConfirmation ? { ...msg, isConfirmation: false, content: t('ad_gen_canceled') } : msg
     ));
   };
 
@@ -479,9 +481,9 @@ function AdGenerator({ onNavigate }) {
       <div className="chat-header-simple glass reveal">
         <div className="chat-header-info">
           <div className="bot-avatar" style={{ background: '#ec4899' }}><Sparkles size={20} color="#fff" /></div>
-          <div><h3>Générateur Publicité</h3><div className="chat-status"><span className="status-dot"></span><small>Assistant Marketing IA</small></div></div>
+          <div><h3>{t('adGenTitle')}</h3><div className="chat-status"><span className="status-dot"></span><small>{t('marketingAssistant')}</small></div></div>
         </div>
-        <button className="btn-add-token-small" onClick={handleClearHistory} style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-muted)' }} title="Effacer la conversation">
+        <button className="btn-add-token-small" onClick={handleClearHistory} style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-muted)' }} title={t('clearConversation')}>
           <Trash2 size={16} />
         </button>
       </div>
@@ -501,18 +503,18 @@ function AdGenerator({ onNavigate }) {
               {msg.videoUrl && (
                 <div className="message-video-attachment">
                   <video controls src={msg.videoUrl} autoPlay muted loop playsInline />
-                  <a href={msg.videoUrl} download className="download-link-apple"><Download size={14} style={{ marginRight: '6px' }} /> Enregistrer</a>
+                  <a href={msg.videoUrl} download className="download-link-apple"><Download size={14} style={{ marginRight: '6px' }} /> {t('save')}</a>
                 </div>
               )}
               {msg.isConfirmation && (
                 <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
-                  <button onClick={handleConfirmGeneration} className="btn-apple-primary sm" style={{ background: '#ec4899', color: 'white', border: 'none' }}><CheckCircle2 size={16} style={{ marginRight: '6px' }} /> Confirmer (10 jetons)</button>
-                  <button onClick={handleCancelGeneration} className="btn-apple-secondary sm"><X size={16} style={{ marginRight: '6px' }} /> Annuler</button>
+                  <button onClick={handleConfirmGeneration} className="btn-apple-primary sm" style={{ background: '#ec4899', color: 'white', border: 'none' }}><CheckCircle2 size={16} style={{ marginRight: '6px' }} /> {t('confirmTokens')}</button>
+                  <button onClick={handleCancelGeneration} className="btn-apple-secondary sm"><X size={16} style={{ marginRight: '6px' }} /> {t('cancel')}</button>
                 </div>
               )}
               {msg.isEndOption && (
                 <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
-                  <button onClick={handleClearHistory} className="btn-apple-primary sm" style={{ background: '#ec4899', color: 'white', border: 'none' }}><Sparkles size={16} style={{ marginRight: '6px' }} /> Nouvelle pub</button>
+                  <button onClick={handleClearHistory} className="btn-apple-primary sm" style={{ background: '#ec4899', color: 'white', border: 'none' }}><Sparkles size={16} style={{ marginRight: '6px' }} /> {t('newAd')}</button>
                 </div>
               )}
             </div>
@@ -522,7 +524,7 @@ function AdGenerator({ onNavigate }) {
           <div className="message bot reveal">
             <div className="message-avatar"><Bot size={20} /></div>
             <div className="message-content glass" style={{ width: '100%' }}>
-              <p style={{ marginBottom: '15px', fontWeight: '600' }}>Sélectionnez un concept :</p>
+              <p style={{ marginBottom: '15px', fontWeight: '600' }}>{t('selectConcept')}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {suggestions.map((sugg, idx) => (
                   <button key={idx} onClick={() => handleGenerateVideo(sugg)} style={{ padding: '12px', borderRadius: '12px', border: '1px solid var(--border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
@@ -539,7 +541,7 @@ function AdGenerator({ onNavigate }) {
       <div className="chat-input-area glass reveal">
         {step === 5 ? (
           <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', padding: '10px', alignItems: 'center' }}>
-            <button onClick={handleClearHistory} className="btn-apple-secondary" style={{ padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Recommencer">
+            <button onClick={handleClearHistory} className="btn-apple-secondary" style={{ padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={t('restart')}>
                 <RotateCcw size={20} />
             </button>
             <button onClick={() => handleLanguageSelect('Français')} className="btn-apple-secondary" style={{ minWidth: '120px' }}>Français 🇫🇷</button>
@@ -547,30 +549,30 @@ function AdGenerator({ onNavigate }) {
           </div>
         ) : step === 6 ? (
           <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', padding: '10px', alignItems: 'center' }}>
-            <button onClick={handleClearHistory} className="btn-apple-secondary" style={{ padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Recommencer">
+            <button onClick={handleClearHistory} className="btn-apple-secondary" style={{ padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={t('restart')}>
                 <RotateCcw size={20} />
             </button>
             <button onClick={() => handleFormatSelect('mobile')} className="btn-apple-secondary" style={{ minWidth: '120px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '12px' }}>
                 <Smartphone size={24} />
-                <span>Portrait</span>
+                <span>{t('portrait')}</span>
             </button>
             <button onClick={() => handleFormatSelect('pc')} className="btn-apple-secondary" style={{ minWidth: '120px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '12px' }}>
                 <Monitor size={24} />
-                <span>Paysage</span>
+                <span>{t('landscape')}</span>
             </button>
           </div>
         ) : (
           <form onSubmit={handleSend} className="chat-input-row lower-input">
-            <button type="button" onClick={handleClearHistory} className="btn-apple-secondary btn-reset-chat" style={{ padding: '0 10px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }} title="Recommencer à zéro">
+            <button type="button" onClick={handleClearHistory} className="btn-apple-secondary btn-reset-chat" style={{ padding: '0 10px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }} title={t('restartZero')}>
                 <RotateCcw size={18} />
             </button>
             <label className="btn-upload-icon" style={{ opacity: step === 3 ? 1 : 0.3, cursor: step === 3 ? 'pointer' : 'not-allowed' }}>
               <ImageIcon size={20} />
               <input type="file" accept=".jpg, .jpeg, .png" onChange={handleImageUpload} disabled={step !== 3} style={{ display: 'none' }} />
             </label>
-            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder={step === 3 ? "Téléchargez une image..." : "Écrivez votre réponse..."} className="chat-textarea" style={{ height: '40px', minHeight: 'auto' }} disabled={loading || step === 3} />
+            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder={step === 3 ? t('uploadImage') : t('writeResponse')} className="chat-textarea" style={{ height: '40px', minHeight: 'auto' }} disabled={loading || step === 3} />
             {step === 4 && (
-              <button type="button" onClick={handleSkipPrice} className="btn-apple-secondary" style={{ padding: '8px 12px', fontSize: '0.8rem', whiteSpace: 'nowrap', height: 'auto' }}>Ignorer</button>
+              <button type="button" onClick={handleSkipPrice} className="btn-apple-secondary" style={{ padding: '8px 12px', fontSize: '0.8rem', whiteSpace: 'nowrap', height: 'auto' }}>{t('skip')}</button>
             )}
             <button type="submit" className="btn-send-chat" disabled={loading || (!input.trim() && step !== 3)}><Send size={18} /></button>
           </form>
@@ -582,17 +584,17 @@ function AdGenerator({ onNavigate }) {
           <div className="modal-content glass reveal">
             <button className="close-btn" onClick={() => setShowModal(false)}><X size={20} /></button>
             <div className="modal-header">
-              <h2 className="modal-title">Recharger vos jetons</h2>
-              <p className="modal-subtitle">Propulsez vos publicités avec nos packs</p>
+              <h2 className="modal-title">{t('rechargeTokens')}</h2>
+              <p className="modal-subtitle">{t('propelAds')}</p>
             </div>
             <div className="packages-grid">
               {packages.map((pkg, index) => (
                 <div key={pkg.id} className={`package-card reveal ${index === 1 ? 'popular' : ''}`}>
-                  {index === 1 && <div className="popular-badge"><Trophy size={12} style={{ marginRight: '4px' }} /> Recommandé</div>}
+                  {index === 1 && <div className="popular-badge"><Trophy size={12} style={{ marginRight: '4px' }} /> {t('recommended')}</div>}
                   <h3 className="package-name">{pkg.name}</h3>
                   <div className="package-price">{(pkg.price / 100).toFixed(2)}€</div>
-                  <div className="package-tokens"><Zap size={18} fill="currentColor" /> {pkg.tokens} Jetons</div>
-                  <button className="btn-package-select" onClick={() => handleBuyPackage(pkg.id)} disabled={paymentLoading}>Choisir</button>
+                  <div className="package-tokens"><Zap size={18} fill="currentColor" /> {pkg.tokens} {t('tokens')}</div>
+                  <button className="btn-package-select" onClick={() => handleBuyPackage(pkg.id)} disabled={paymentLoading}>{t('choose')}</button>
                 </div>
               ))}
             </div>

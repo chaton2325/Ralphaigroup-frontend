@@ -20,8 +20,10 @@ import {
   ChevronUp
 } from 'lucide-react';
 import api from './services/api';
+import { useTranslation } from './LanguageContext';
 
 function Projects({ onNavigate }) {
+  const { t } = useTranslation();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -182,14 +184,14 @@ function Projects({ onNavigate }) {
         <div className="header-left">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <History size={24} color="var(--accent)" />
-            <h2 style={{ fontSize: '2rem', margin: 0, color: 'var(--text-main)' }}>Mes Projets</h2>
+            <h2 style={{ fontSize: '2rem', margin: 0, color: 'var(--text-main)' }}>{t('myProjects')}</h2>
           </div>
-          <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0' }}>Bibliothèque haute performance de vos créations AI</p>
+          <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0' }}>{t('libraryDesc')}</p>
         </div>
         <div className="header-buttons-container" style={{ display: 'flex', gap: '10px' }}>
           <button className="btn-apple-secondary" onClick={() => onNavigate('dashboard')}>
             <ArrowLeft size={16} style={{ marginRight: '8px' }} />
-            Dashboard
+            {t('dashboard')}
           </button>
         </div>
       </div>
@@ -199,26 +201,26 @@ function Projects({ onNavigate }) {
           className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
           onClick={() => setFilter('all')}
         >
-          Tout voir
+          {t('viewAll')}
         </button>
         <button
           className={`filter-btn ${filter === 'landscape' ? 'active' : ''}`}
           onClick={() => setFilter('landscape')}
         >
           <Monitor size={14} style={{ marginRight: '8px' }} />
-          Paysage
+          {t('landscape')}
         </button>
         <button
           className={`filter-btn ${filter === 'portrait' ? 'active' : ''}`}
           onClick={() => setFilter('portrait')}
         >
           <Smartphone size={14} style={{ marginRight: '8px' }} />
-          Portrait
+          {t('portrait')}
         </button>
         {!isSelectionMode ? (
           <button className="btn-apple-secondary" onClick={toggleSelectionMode}>
             <Layers size={16} style={{ marginRight: '8px' }} />
-            Fusionner
+            {t('merge')}
           </button>
         ) : (
           <>
@@ -229,11 +231,11 @@ function Projects({ onNavigate }) {
               style={{ background: '#ec4899', borderColor: '#ec4899' }}
             >
               <Layers size={16} style={{ marginRight: '8px' }} />
-              Fusionner ({selectedVideos.length})
+              {t('merge')} ({selectedVideos.length})
             </button>
             <button className="btn-apple-secondary" onClick={toggleSelectionMode}>
               <X size={16} style={{ marginRight: '8px' }} />
-              Annuler
+              {t('cancel')}
             </button>
           </>
         )}
@@ -242,15 +244,15 @@ function Projects({ onNavigate }) {
       {loading ? (
         <div className="loading-state reveal">
           <Loader2 size={32} className="animate-spin" color="var(--accent)" />
-          <p>Chargement de votre bibliothèque...</p>
+          <p>{t('loadingLibrary')}</p>
         </div>
       ) : videos.length === 0 ? (
         <div className="empty-state reveal">
           <VideoOff size={48} strokeWidth={1} opacity={0.3} style={{ marginBottom: '1.5rem' }} />
-          <p className="empty-title">Bibliothèque vide</p>
-          <p className="empty-subtitle">Vos futures créations seront archivées automatiquement ici.</p>
+          <p className="empty-title">{t('emptyLibrary')}</p>
+          <p className="empty-subtitle">{t('emptyLibraryDesc')}</p>
           <button className="btn-apple-primary" onClick={() => onNavigate('create')} style={{ marginTop: '2rem' }}>
-            Créer ma première vidéo
+            {t('createFirstVideo')}
           </button>
         </div>
       ) : (
@@ -304,13 +306,13 @@ function Projects({ onNavigate }) {
                       onClick={(e) => handleViewPrompt(video.prompt, e)}
                       style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.8rem', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '4px' }}
                     >
-                      Voir tout <ChevronDown size={14} />
+                      {t('viewAllText')} <ChevronDown size={14} />
                     </button>
                   </div>
                   <div className="project-actions" style={{ marginTop: '1.5rem', display: 'flex', gap: '10px' }}>
                     <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="btn-apple-primary sm w-full" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <ExternalLink size={14} style={{ marginRight: '6px' }} />
-                      Voir / Télécharger
+                      {t('viewDownload')}
                     </a>
                   </div>
                 </div>
@@ -325,8 +327,8 @@ function Projects({ onNavigate }) {
           <div className="modal-content glass reveal" style={{ maxWidth: '600px' }}>
             <button className="close-btn" onClick={() => setShowMergeModal(false)}><X size={20} /></button>
             <div className="modal-header">
-              <h2 className="modal-title">Fusionner les séquences</h2>
-              <p className="modal-subtitle">Organisez l'ordre de vos {selectedVideos.length} vidéos</p>
+              <h2 className="modal-title">{t('mergeSequences')}</h2>
+              <p className="modal-subtitle">{t('organizeOrder')} {selectedVideos.length} {t('videos')}</p>
             </div>
 
             <div style={{ maxHeight: '400px', overflowY: 'auto', margin: '20px 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -338,7 +340,7 @@ function Projects({ onNavigate }) {
                   <span style={{ fontWeight: 'bold', color: 'var(--text-muted)', width: '20px' }}>{idx + 1}</span>
                   <video src={video.video_url} style={{ width: '80px', height: '45px', objectFit: 'cover', borderRadius: '4px', background: '#000' }} />
                   <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <div style={{ fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{video.prompt || 'Sans titre'}</div>
+                    <div style={{ fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{video.prompt || t('untitled')}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(video.created_at).toLocaleDateString()}</div>
                   </div>
                   <div style={{ display: 'flex', gap: '5px' }}>
@@ -364,9 +366,9 @@ function Projects({ onNavigate }) {
                 style={{ background: '#ec4899', justifyContent: 'center' }}
               >
                 {merging ? (
-                  <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> Fusion en cours {mergeProgress}%</>
+                  <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> {t('merging')} {mergeProgress}%</>
                 ) : (
-                  <><Layers size={18} style={{ marginRight: '8px' }} /> Lancer la fusion</>
+                  <><Layers size={18} style={{ marginRight: '8px' }} /> {t('startMerge')}</>
                 )}
               </button>
             </div>
@@ -379,13 +381,13 @@ function Projects({ onNavigate }) {
           <div className="modal-content glass reveal" style={{ maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <button className="close-btn" onClick={() => setActivePrompt(null)}><X size={20} /></button>
             <div className="modal-header">
-              <h2 className="modal-title">Prompt complet</h2>
+              <h2 className="modal-title">{t('fullPrompt')}</h2>
             </div>
             <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: 'var(--text-main)', padding: '10px 0' }}>
               {activePrompt}
             </div>
             <div className="modal-footer">
-              <button className="btn-apple-primary w-full" onClick={() => setActivePrompt(null)}>Fermer</button>
+              <button className="btn-apple-primary w-full" onClick={() => setActivePrompt(null)}>{t('close')}</button>
             </div>
           </div>
         </div>
@@ -395,17 +397,17 @@ function Projects({ onNavigate }) {
         <div className="modal-overlay reveal" style={{ zIndex: 2000 }}>
           <div className="modal-content glass reveal" style={{ maxWidth: '400px', textAlign: 'center' }}>
             <div className="modal-header" style={{ justifyContent: 'center', marginBottom: '10px' }}>
-              <h2 className="modal-title">Mode Fusion</h2>
+              <h2 className="modal-title">{t('mergeMode')}</h2>
             </div>
             <p style={{ marginBottom: '20px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-              Sélectionnez vos vidéos en cochant les cases pour commencer la fusion.
+              {t('mergeInstructions')}
             </p>
             <button 
               className="btn-apple-primary w-full" 
               onClick={() => setShowInstructionModal(false)}
               style={{ justifyContent: 'center' }}
             >
-              Compris
+              {t('understood')}
             </button>
           </div>
         </div>
