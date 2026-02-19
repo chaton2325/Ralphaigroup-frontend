@@ -136,7 +136,7 @@ export const translations = {
     cv_confirm_gen: "Voulez-vous vraiment générer la vidéo pour ce prompt : \"{prompt}\" ?\n\nCoût de la génération : 10 jetons.",
     cv_conf_received: "Confirmation reçue. Génération en cours...",
     cv_success_gen: "Opération terminée avec succès. Voici votre création.",
-    cv_critical_error: "Une erreur critique est survenue lors de la génération.",
+    cv_critical_error: "Une erreur critique est survenue lors de la génération. Assurez-vous que votre prompt respecte les conditions suivantes : pas de contenu violent, sexuel, haineux,contenant des photos d'enfants, ou tout autre sujet sensible. Essayez de reformuler votre prompt en évitant ces thèmes.",
     cv_gen_canceled: "Génération annulée.",
     cv_offer_error: "Erreur offres.",
 
@@ -353,7 +353,7 @@ export const translations = {
     cv_confirm_gen: "Do you really want to generate video for this prompt: \"{prompt}\"?\n\nGeneration cost: 10 tokens.",
     cv_conf_received: "Confirmation received. Generation in progress...",
     cv_success_gen: "Operation completed successfully. Here is your creation.",
-    cv_critical_error: "A critical error occurred during generation.",
+    cv_critical_error: "A critical error occurred during generation. Please ensure your invite complies with the following conditions: no violent, sexual, hateful content, no images of children, or any other sensitive topics. Try rewriting your invite to avoid these themes.",
     cv_gen_canceled: "Generation canceled.",
     cv_offer_error: "Offer error.",
 
