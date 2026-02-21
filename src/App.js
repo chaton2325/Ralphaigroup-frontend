@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   BarChart3,
   PlusSquare,
@@ -26,6 +26,7 @@ import {
 import './App.css';
 import { useTranslation } from './LanguageContext';
 import Login from './Login';
+import api from './services/api';
 import Signup from './Signup';
 import Footer from './Footer';
 import Dashboard from './Dashboard';
@@ -43,7 +44,7 @@ function App() {
 
   const isAuthPage = ['dashboard', 'projects', 'create', 'ad-generator'].includes(currentPage);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('chat_history');
@@ -54,7 +55,23 @@ function App() {
     localStorage.removeItem('ad_pending_generation');
     setShowMobileMenu(false);
     setCurrentPage('home');
-  };
+  }, []);
+
+  useEffect(() => {
+    const interceptor = api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          handleLogout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      api.interceptors.response.eject(interceptor);
+    };
+  }, [handleLogout]);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
